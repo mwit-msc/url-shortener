@@ -1,10 +1,7 @@
 const nextConfig = {
-  // Enable experimental features for better multi-domain support
   experimental: {
-    // Future experimental features can be added here
   },
-  
-  // Configure headers for better CORS and security
+
   async headers() {
     return [
       {
@@ -27,10 +24,8 @@ const nextConfig = {
     ]
   },
 
-  // Configure rewrites for better domain handling
   async rewrites() {
     return [
-      // Handle shortcode redirects for all domains
       {
         source: "/:shortCode([a-zA-Z0-9_-]+)",
         destination: "/api/redirect/:shortCode",
@@ -43,7 +38,10 @@ const nextConfig = {
       },
     ]
   },
-
+  ... process.env.USEDOCKER === 'true' ? {
+      outputFileTracingRoot: '/app',
+      output: 'standalone',
+  } : {},
   eslint: {
     ignoreDuringBuilds: true,
   },
