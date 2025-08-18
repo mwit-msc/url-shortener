@@ -1,0 +1,23 @@
+import { type NextRequest, NextResponse } from "next/server"
+import { getCurrentUser } from "@/lib/auth-utils"
+import { deleteLink } from "@/lib/link-service"
+
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const user = await getCurrentUser()
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const result = await deleteLink(params.id, user.id, user.role)
+
+    if (!result.success) {
+      return NextResponse.json({ error: result.error }, { status: 400 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("Error deleting link:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}

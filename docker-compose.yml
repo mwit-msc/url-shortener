@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/mwit-link_tiny
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=your-secret-key-here
+      - GOOGLE_CLIENT_ID=your-google-client-id
+      - GOOGLE_CLIENT_SECRET=your-google-client-secret
+    depends_on:
+      - db
+    labels:
+      # Traefik labels for multi-domain support
+      - "traefik.enable=true"
+      - "traefik.http.routers.mwit-link.rule=Host(`tiny.mwit.link`) || Host(`s.mwit.link`)"
+      - "traefik.http.routers.mwit-link.entrypoints=web"
+      - "traefik.http.services.mwit-link.loadbalancer.server.port=3000"
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=mwit-link_tiny
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  traefik:
+    image: traefik:v2.10
+    command:
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+volumes:
+  postgres_data:

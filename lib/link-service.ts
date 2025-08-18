@@ -1,0 +1,248 @@
+import { prisma } from "./prisma"
+import { generateUniqueShortCode, isShortCodeAvailable, isValidUrl, isValidShortCode } from "./shortcode"
+import { UserRole } from "@prisma/client"
+
+export interface CreateLinkParams {
+  originalUrl: string
+  title?: string
+  description?: string
+  customShortCode?: string
+  domainId: string
+  userId: string
+  userRole: UserRole
+  expiresAt?: Date
+}
+
+export interface CreateLinkResult {
+  success: boolean
+  link?: {
+    id: string
+    shortCode: string
+    originalUrl: string
+    domain: string
+    fullUrl: string
+  }
+  customRequest?: {
+    id: string
+    status: string
+  }
+  error?: string
+}
+
+export async function createLink(params: CreateLinkParams): Promise<CreateLinkResult> {
+  const { originalUrl, title, description, customShortCode, domainId, userId, userRole, expiresAt } = params
+
+  // Validate URL
+  if (!isValidUrl(originalUrl)) {
+    return { success: false, error: "Invalid URL format" }
+  }
+
+  // Get domain info
+  const domain = await prisma.domain.findUnique({
+    where: { id: domainId, isActive: true },
+  })
+
+  if (!domain) {
+    return { success: false, error: "Domain not found or inactive" }
+  }
+
+  // Check user's link limit (for regular users)
+  if (userRole === UserRole.USER) {
+    const userLinkCount = await prisma.link.count({
+      where: { userId, isActive: true },
+    })
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { linkLimit: true },
+    })
+
+    if (user && userLinkCount >= user.linkLimit) {
+      return { success: false, error: "Link limit exceeded" }
+    }
+  }
+
+  // Handle custom shortcode
+  if (customShortCode) {
+    if (!isValidShortCode(customShortCode)) {
+      return { success: false, error: "Invalid shortcode format" }
+    }
+
+    const isAvailable = await isShortCodeAvailable(customShortCode, domainId)
+    if (!isAvailable) {
+      return { success: false, error: "Shortcode already exists" }
+    }
+
+    // Special users and admins can create custom links directly
+    if (userRole === UserRole.SPECIAL_USER || userRole === UserRole.ADMIN) {
+      const link = await prisma.link.create({
+        data: {
+          shortCode: customShortCode,
+          originalUrl,
+          title,
+          description,
+          domainId,
+          userId,
+          isCustom: true,
+          expiresAt,
+        },
+      })
+
+      return {
+        success: true,
+        link: {
+          id: link.id,
+          shortCode: link.shortCode,
+          originalUrl: link.originalUrl,
+          domain: domain.domain,
+          fullUrl: `https://${domain.domain}/${link.shortCode}`,
+        },
+      }
+    } else {
+      // Regular users need approval for custom shortcodes
+      const customRequest = await prisma.customLinkRequest.create({
+        data: {
+          shortCode: customShortCode,
+          originalUrl,
+          title,
+          description,
+          domainId,
+          userId,
+        },
+      })
+
+      return {
+        success: true,
+        customRequest: {
+          id: customRequest.id,
+          status: "pending_approval",
+        },
+      }
+    }
+  }
+
+  // Generate automatic shortcode
+  const shortCode = await generateUniqueShortCode(domainId)
+
+  const link = await prisma.link.create({
+    data: {
+      shortCode,
+      originalUrl,
+      title,
+      description,
+      domainId,
+      userId,
+      isCustom: false,
+      expiresAt,
+    },
+  })
+
+  return {
+    success: true,
+    link: {
+      id: link.id,
+      shortCode: link.shortCode,
+      originalUrl: link.originalUrl,
+      domain: domain.domain,
+      fullUrl: `https://${domain.domain}/${link.shortCode}`,
+    },
+  }
+}
+
+export async function getLinkByShortCode(shortCode: string, domain: string) {
+  return await prisma.link.findFirst({
+    where: {
+      shortCode,
+      domain: { domain },
+      isActive: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+    },
+    include: {
+      domain: true,
+      user: {
+        select: { name: true, email: true },
+      },
+    },
+  })
+}
+
+export async function incrementClickCount(
+  linkId: string,
+  analyticsData?: {
+    ipAddress?: string
+    userAgent?: string
+    referer?: string
+    country?: string
+    city?: string
+  },
+) {
+  // Increment click count
+  await prisma.link.update({
+    where: { id: linkId },
+    data: { clicks: { increment: 1 } },
+  })
+
+  // Record analytics if data provided
+  if (analyticsData) {
+    await prisma.linkAnalytics.create({
+      data: {
+        linkId,
+        ...analyticsData,
+      },
+    })
+  }
+}
+
+export async function getUserLinks(userId: string, page = 1, limit = 10) {
+  const skip = (page - 1) * limit
+
+  const [links, total] = await Promise.all([
+    prisma.link.findMany({
+      where: { userId },
+      include: {
+        domain: true,
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.link.count({
+      where: { userId },
+    }),
+  ])
+
+  return {
+    links: links.map((link) => ({
+      ...link,
+      fullUrl: `https://${link.domain.domain}/${link.shortCode}`,
+    })),
+    pagination: {
+      page,
+      limit,
+      total,
+      pages: Math.ceil(total / limit),
+    },
+  }
+}
+
+export async function deleteLink(linkId: string, userId: string, userRole: UserRole) {
+  const link = await prisma.link.findUnique({
+    where: { id: linkId },
+  })
+
+  if (!link) {
+    return { success: false, error: "Link not found" }
+  }
+
+  // Users can only delete their own links, admins can delete any
+  if (link.userId !== userId && userRole !== UserRole.ADMIN) {
+    return { success: false, error: "Unauthorized" }
+  }
+
+  await prisma.link.update({
+    where: { id: linkId },
+    data: { isActive: false },
+  })
+
+  return { success: true }
+}
