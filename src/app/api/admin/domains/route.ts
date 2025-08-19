@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newDomain)
   } catch (error) {
-    if (error.code === "P2002") {
+    if (error instanceof Error && 'code' in error && error.code === "P2002") {
       return NextResponse.json({ error: "Domain already exists" }, { status: 400 })
     }
     console.error("Error creating domain:", error)

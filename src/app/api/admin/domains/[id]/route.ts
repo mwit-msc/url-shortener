@@ -2,13 +2,14 @@ import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     await requireAdmin()
     const { isActive } = await request.json()
 
     const domain = await prisma.domain.update({
-      where: { id: params.id },
+      where: { id },
       data: { isActive },
     })
 
@@ -19,13 +20,14 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     await requireAdmin()
 
     // Check if domain has any links
     const linkCount = await prisma.link.count({
-      where: { domainId: params.id },
+      where: { domainId: id },
     })
 
     if (linkCount > 0) {
@@ -33,7 +35,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     }
 
     await prisma.domain.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })

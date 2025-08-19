@@ -4,13 +4,14 @@ import { prisma } from "@/lib/prisma"
 import { createLink } from "@/lib/link-service"
 import { UserRole } from "@prisma/client"
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params
     const admin = await requireAdmin()
     const { action, adminNote } = await request.json()
 
     const customRequest = await prisma.customLinkRequest.findUnique({
-      where: { id: params.id },
+      where: { id },
       include: { user: true },
     })
 
@@ -36,7 +37,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 
       // Update request status
       await prisma.customLinkRequest.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           status: "APPROVED",
           adminNote,
@@ -46,7 +47,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       })
     } else if (action === "reject") {
       await prisma.customLinkRequest.update({
-        where: { id: params.id },
+        where: { id },
         data: {
           status: "REJECTED",
           adminNote,

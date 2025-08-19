@@ -2,8 +2,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getLinkByShortCode, incrementClickCount } from "@/lib/link-service"
 import { headers } from "next/headers"
 
-export async function GET(request: NextRequest, { params }: { params: { shortCode: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ shortCode: string }> }) {
   try {
+    const { shortCode } = await params
     const { searchParams } = new URL(request.url)
     const domain = searchParams.get("domain")
 
@@ -11,7 +12,7 @@ export async function GET(request: NextRequest, { params }: { params: { shortCod
       return NextResponse.json({ error: "Domain not specified" }, { status: 400 })
     }
 
-    const headersList = headers()
+    const headersList = await headers()
     const userAgent = headersList.get("user-agent") || ""
     const referer = headersList.get("referer") || ""
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest, { params }: { params: { shortCod
     const forwarded = headersList.get("x-forwarded-for")
     const ipAddress = forwarded ? forwarded.split(",")[0] : headersList.get("x-real-ip") || ""
 
-    const link = await getLinkByShortCode(params.shortCode, domain)
+    const link = await getLinkByShortCode(shortCode, domain)
 
     if (!link) {
       // Return a 404 page instead of JSON for better UX

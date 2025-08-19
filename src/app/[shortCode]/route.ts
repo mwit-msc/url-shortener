@@ -2,8 +2,9 @@ import { type NextRequest, NextResponse } from "next/server"
 import { getLinkByShortCode, incrementClickCount } from "@/lib/link-service"
 import { headers } from "next/headers"
 
-export async function GET(request: NextRequest, { params }: { params: { shortCode: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ shortCode: string }> }) {
   try {
+    const { shortCode } = await params
     const headersList = headers()
     const host = (await headersList).get("host") || ""
     const userAgent = (await headersList).get("user-agent") || ""
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest, { params }: { params: { shortCod
     const forwarded = (await headersList).get("x-forwarded-for")
     const ipAddress = forwarded ? forwarded.split(",")[0] : (await headersList).get("x-real-ip") || ""
 
-    const link = await getLinkByShortCode(params.shortCode, host)
+    const link = await getLinkByShortCode(shortCode, host)
 
     if (!link) {
       return NextResponse.json({ error: "Link not found" }, { status: 404 })
