@@ -187,7 +187,6 @@ export function LinksList({}: LinksListProps) {
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction 
                         onClick={() => deleteLink(link.id)} 
-                        variant="outline"
                         className="bg-yellow-50 hover:bg-yellow-100 text-yellow-800 border-yellow-300"
                       >
                         ซ่อน (สามารถกู้คืนได้)
