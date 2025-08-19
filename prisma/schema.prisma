@@ -110,6 +110,7 @@ model Link {
   domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   analytics LinkAnalytics[]
+  abuseReports AbuseReport[]
 
   @@unique([shortCode, domainId]) // Ensure unique shortcodes per domain
   @@map("links")
@@ -166,4 +167,41 @@ enum DomainRestriction {
   EVERYONE     // Anyone can use this domain
   ADMIN_ONLY   // Only admins can use this domain
   SPECIFIC_USERS // Only specific users can use this domain
+}
+
+model AbuseReport {
+  id          String            @id @default(cuid())
+  linkId      String
+  reporterIp  String?           // Optional IP address of reporter (hashed for privacy)
+  reporterEmail String?         // Optional email for follow-up
+  reportType  AbuseReportType
+  description String?           @db.Text // Additional details from reporter
+  status      AbuseReportStatus @default(PENDING)
+  reviewedBy  String?           // Admin who reviewed the report
+  reviewedAt  DateTime?
+  adminNote   String?           @db.Text // Admin's note when reviewing
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
+
+  @@map("abuse_reports")
+}
+
+enum AbuseReportType {
+  SPAM         // Spam or unwanted content
+  MALWARE      // Malicious software or phishing
+  ILLEGAL      // Illegal content
+  COPYRIGHT    // Copyright infringement
+  HARASSMENT   // Harassment or abuse
+  ADULT_CONTENT // Adult/inappropriate content
+  SCAM         // Scam or fraud
+  OTHER        // Other type of abuse
+}
+
+enum AbuseReportStatus {
+  PENDING      // Report submitted, awaiting review
+  INVESTIGATING // Report is being investigated
+  RESOLVED     // Report resolved, action taken
+  DISMISSED    // Report dismissed as invalid
 }

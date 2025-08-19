@@ -2,42 +2,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import Link from "next/link"
-import { Suspense } from "react"
 
-function UnauthorizedContent() {
-  if (typeof window !== "undefined") {
-    const urlParams = new URLSearchParams(window.location.search)
-    const reason = urlParams.get("reason")
-    const allowedHost = urlParams.get("allowed_host")
+interface UnauthorizedProps {
+  searchParams: Promise<{
+    reason?: string
+    allowed_host?: string
+  }>
+}
 
-    if (reason === "host_restriction" && allowedHost) {
-      return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="absolute top-4 right-4">
-            <ThemeToggle />
-          </div>
-          <Card className="w-full max-w-lg">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl font-bold text-destructive">Host Access Restricted</CardTitle>
-              <CardDescription>Login and administrative functions are restricted to the authorized domain.</CardDescription>
-            </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Please access this site from <span className="font-mono font-medium">{allowedHost}</span> to use login and administrative features.
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Short link redirects continue to work from any domain.
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button asChild>
-                  <Link href={`https://${allowedHost}`}>Go to {allowedHost}</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+export default async function Unauthorized({ searchParams }: UnauthorizedProps) {
+  const { reason, allowed_host: allowedHost } = await searchParams
+
+  if (reason === "host_restriction" && allowedHost) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
         </div>
-      )
-    }
+        <Card className="w-full max-w-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl font-bold text-destructive">การเข้าถึงถูกจำกัด</CardTitle>
+            <CardDescription>การเข้าสู่ระบบและฟังก์ชันการจัดการถูกจำกัดเฉพาะโดเมนที่ได้รับอนุญาต</CardDescription>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <p className="text-sm text-muted-foreground">
+              กรุณาเข้าใช้งานจาก <span className="font-mono font-medium">{allowedHost}</span> เพื่อใช้งานการเข้าสู่ระบบและฟีเจอร์การจัดการ
+            </p>
+            <p className="text-xs text-muted-foreground">
+              ลิงก์สั้นยังคงทำงานได้ปกติจากทุกโดเมน
+            </p>
+            <div className="flex gap-2 justify-center">
+              <Button asChild>
+                <Link href={`https://${allowedHost}`}>ไปยัง {allowedHost}</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -47,29 +49,21 @@ function UnauthorizedContent() {
       </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-destructive">Access Denied</CardTitle>
-          <CardDescription>You don&apos;t have permission to access this resource.</CardDescription>
+          <CardTitle className="text-2xl font-bold text-destructive">การเข้าถึงถูกปฏิเสธ</CardTitle>
+          <CardDescription>คุณไม่มีสิทธิ์ในการเข้าถึงทรัพยากรนี้</CardDescription>
         </CardHeader>
         <CardContent className="text-center space-y-4">
-          <p className="text-sm text-muted-foreground">Contact an administrator if you believe this is an error.</p>
+          <p className="text-sm text-muted-foreground">ติดต่อผู้ดูแลระบบหากคุณเชื่อว่านี่เป็นข้อผิดพลาด</p>
           <div className="flex gap-2 justify-center">
             <Button asChild variant="outline">
-              <Link href="/dashboard">Dashboard</Link>
+              <Link href="/dashboard">แดชบอร์ด</Link>
             </Button>
             <Button asChild>
-              <Link href="/">Home</Link>
+              <Link href="/">หน้าหลัก</Link>
             </Button>
           </div>
         </CardContent>
       </Card>
     </div>
-  )
-}
-
-export default function Unauthorized() {
-  return (
-    <Suspense fallback={<UnauthorizedContent />}>
-      <UnauthorizedContent />
-    </Suspense>
   )
 }

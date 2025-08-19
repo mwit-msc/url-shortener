@@ -5,6 +5,7 @@ import { CustomRequestsPanel } from "@/components/admin/custom-requests-panel"
 import { UserManagement } from "@/components/admin/user-management"
 import { DomainManagement } from "@/components/admin/domain-management"
 import { LinkModeration } from "@/components/admin/link-moderation"
+import { AbuseReportsPanel } from "@/components/admin/abuse-reports-panel"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default async function AdminPage() {
@@ -25,8 +26,9 @@ export default async function AdminPage() {
         </div>
 
         <Tabs defaultValue="requests" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="requests">คำขอที่กำหนดเอง</TabsTrigger>
+            <TabsTrigger value="abuse">รายงานการละเมิด</TabsTrigger>
             <TabsTrigger value="users">ผู้ใช้</TabsTrigger>
             <TabsTrigger value="domains">โดเมน</TabsTrigger>
             <TabsTrigger value="links">การกลั่นกรองลิงก์</TabsTrigger>
@@ -34,6 +36,10 @@ export default async function AdminPage() {
 
           <TabsContent value="requests">
             <CustomRequestsPanel />
+          </TabsContent>
+
+          <TabsContent value="abuse">
+            <AbuseReportsPanel />
           </TabsContent>
 
           <TabsContent value="users">
