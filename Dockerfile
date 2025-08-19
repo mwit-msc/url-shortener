@@ -13,7 +13,7 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json bun.lockb* yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 
-RUN bun install
+RUN bun install --production
 
 # Rebuild the source code only when needed
 FROM base AS builder
@@ -29,7 +29,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY next.config.ts tsconfig.json ./
 
-RUN bunx prima generate
+RUN bun x prisma generate
 # Build the application using Bun
 RUN bun run build
 
@@ -61,8 +61,9 @@ USER nextjs
 EXPOSE 3000
 
 ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 RUN ls -l /app
 
 # Use Bun to run server.js
-CMD HOSTNAME="0.0.0.0" bun run server.js
+CMD ["bun", "run", "server.js"]
