@@ -198,7 +198,7 @@ export async function getUserLinks(userId: string, page = 1, limit = 10) {
 
   const [links, total] = await Promise.all([
     prisma.link.findMany({
-      where: { userId },
+      where: { userId, isActive: true },
       include: {
         domain: true,
       },
@@ -207,7 +207,7 @@ export async function getUserLinks(userId: string, page = 1, limit = 10) {
       take: limit,
     }),
     prisma.link.count({
-      where: { userId },
+      where: { userId, isActive: true },
     }),
   ])
 
@@ -225,7 +225,7 @@ export async function getUserLinks(userId: string, page = 1, limit = 10) {
   }
 }
 
-export async function deleteLink(linkId: string, userId: string, userRole: UserRole) {
+export async function deleteLink(linkId: string, userId: string, userRole: UserRole, hardDelete = false) {
   const link = await prisma.link.findUnique({
     where: { id: linkId },
   })
@@ -239,10 +239,21 @@ export async function deleteLink(linkId: string, userId: string, userRole: UserR
     return { success: false, error: "Unauthorized" }
   }
 
-  await prisma.link.update({
-    where: { id: linkId },
-    data: { isActive: false },
-  })
+  if (hardDelete) {
+    // Hard delete: remove from database completely
+    await prisma.linkAnalytics.deleteMany({
+      where: { linkId },
+    })
+    await prisma.link.delete({
+      where: { id: linkId },
+    })
+  } else {
+    // Soft delete: mark as inactive
+    await prisma.link.update({
+      where: { id: linkId },
+      data: { isActive: false },
+    })
+  }
 
   return { success: true }
 }

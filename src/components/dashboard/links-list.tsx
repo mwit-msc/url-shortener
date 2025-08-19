@@ -70,16 +70,17 @@ export function LinksList({}: LinksListProps) {
     })
   }
 
-  const deleteLink = async (linkId: string) => {
+  const deleteLink = async (linkId: string, hardDelete = false) => {
     try {
-      const response = await fetch(`/api/links/${linkId}`, {
+      const url = `/api/links/${linkId}${hardDelete ? "?hard=true" : ""}`
+      const response = await fetch(url, {
         method: "DELETE",
       })
 
       if (response.ok) {
         toast({
             title: "ลิงก์ถูกลบ",
-            description: "ลิงก์ถูกลบเรียบร้อยแล้ว.",
+            description: hardDelete ? "ลิงก์ถูกลบถาวรเรียบร้อยแล้ว." : "ลิงก์ถูกลบเรียบร้อยแล้ว.",
         })
         fetchLinks() // Refresh the list
       } else {
@@ -179,12 +180,24 @@ export function LinksList({}: LinksListProps) {
                     <AlertDialogHeader>
                         <AlertDialogTitle>ลบลิงก์</AlertDialogTitle>
                         <AlertDialogDescription>
-                          คุณแน่ใจหรือว่าต้องการลบลิงก์นี้? การดำเนินการนี้ไม่สามารถย้อนกลับได้.
+                          เลือกวิธีการลบลิงก์นี้:
                       </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
+                    <AlertDialogFooter className="flex-col gap-2 sm:flex-row">
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => deleteLink(link.id)}>Delete</AlertDialogAction>
+                      <AlertDialogAction 
+                        onClick={() => deleteLink(link.id)} 
+                        variant="outline"
+                        className="bg-yellow-50 hover:bg-yellow-100 text-yellow-800 border-yellow-300"
+                      >
+                        ซ่อน (สามารถกู้คืนได้)
+                      </AlertDialogAction>
+                      <AlertDialogAction 
+                        onClick={() => deleteLink(link.id, true)}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        ลบถาวร
+                      </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

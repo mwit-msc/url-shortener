@@ -10,7 +10,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const result = await deleteLink(id, user.id, user.role)
+    const { searchParams } = new URL(request.url)
+    const hardDelete = searchParams.get("hard") === "true"
+
+    const result = await deleteLink(id, user.id, user.role, hardDelete)
 
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 })
