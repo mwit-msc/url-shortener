@@ -1,6 +1,5 @@
 "use client"
 
-import { signOut } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -15,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { UserRole } from "@prisma/client"
 import Link from "next/link"
+import { signOut } from "next-auth/react"
 
 interface DashboardHeaderProps {
   user: {
@@ -75,7 +75,7 @@ export function DashboardHeader({ user }: DashboardHeaderProps) {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/" })}>ออกจากระบบ</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => signOut()}>ออกจากระบบ</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
