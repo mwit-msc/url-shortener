@@ -1,8 +1,12 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
+import { validateHost, createHostValidationResponse } from "@/lib/host-validation"
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!validateHost(request)) {
+    return createHostValidationResponse()
+  }
   try {
     await requireAdmin()
 

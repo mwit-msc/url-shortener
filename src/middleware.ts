@@ -1,8 +1,18 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 
+function getAllowedHost(): string {
+  const nextAuthUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+  try {
+    return new URL(nextAuthUrl).host
+  } catch {
+    return "localhost:3000"
+  }
+}
+
 export function middleware(request: NextRequest) {
   const { pathname, host } = request.nextUrl
+  const allowedHost = getAllowedHost()
 
   // Skip middleware for API routes, static files, and Next.js internals
   if (
@@ -12,6 +22,19 @@ export function middleware(request: NextRequest) {
     pathname.includes(".")
   ) {
     return NextResponse.next()
+  }
+
+  // Check if accessing restricted routes (admin, dashboard, auth) from non-allowed host
+  const restrictedRoutes = ["/dashboard", "/admin", "/auth"]
+  const isRestrictedRoute = restrictedRoutes.some(route => pathname.startsWith(route))
+  
+  if (isRestrictedRoute && host !== allowedHost) {
+    // Redirect to unauthorized page with a message explaining the restriction
+    const url = request.nextUrl.clone()
+    url.pathname = "/unauthorized"
+    url.searchParams.set("reason", "host_restriction")
+    url.searchParams.set("allowed_host", allowedHost)
+    return NextResponse.redirect(url)
   }
 
   // Handle shortcode redirection for all domains

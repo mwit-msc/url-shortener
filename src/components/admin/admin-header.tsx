@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
 
@@ -29,7 +30,10 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </div>
           </div>
 
-          <div className="text-sm text-muted-foreground">เข้าสู่ระบบในชื่อ {user.name || user.email}</div>
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <div className="text-sm text-muted-foreground">เข้าสู่ระบบในชื่อ {user.name || user.email}</div>
+          </div>
         </div>
       </div>
     </header>
