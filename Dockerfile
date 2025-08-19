@@ -28,6 +28,8 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY next.config.ts tsconfig.json ./
+
+RUN bunx prima generate
 # Build the application using Bun
 RUN bun run build
 
