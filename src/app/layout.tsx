@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Athiti } from "next/font/google";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import Footer from "@/components/footer";
 import "./globals.css";
 
 const athti = Athiti({
@@ -32,7 +33,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="min-h-screen flex flex-col">
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
           <Toaster />
         </ThemeProvider>
       </body>
