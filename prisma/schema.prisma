@@ -52,6 +52,7 @@ model User {
   sessions      Session[]
   links         Link[]
   customRequests CustomLinkRequest[]
+  allowedDomains DomainAllowedUser[]
 
   @@map("users")
 }
@@ -66,15 +67,29 @@ model VerificationToken {
 }
 
 model Domain {
-  id        String   @id @default(cuid())
-  domain    String   @unique // e.g., "tiny.mwit.link", "s.mwit.link"
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String            @id @default(cuid())
+  domain       String            @unique // e.g., "tiny.mwit.link", "s.mwit.link"
+  isActive     Boolean           @default(true)
+  restriction  DomainRestriction @default(EVERYONE) // Who can use this domain
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
 
   links Link[]
+  allowedUsers DomainAllowedUser[]
 
   @@map("domains")
+}
+
+model DomainAllowedUser {
+  id       String @id @default(cuid())
+  domainId String
+  userId   String
+  
+  domain Domain @relation(fields: [domainId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([domainId, userId])
+  @@map("domain_allowed_users")
 }
 
 model Link {
@@ -145,4 +160,10 @@ enum CustomRequestStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum DomainRestriction {
+  EVERYONE     // Anyone can use this domain
+  ADMIN_ONLY   // Only admins can use this domain
+  SPECIFIC_USERS // Only specific users can use this domain
 }

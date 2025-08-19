@@ -5,8 +5,19 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { Search, ExternalLink, Trash2 } from "lucide-react"
+import { Search, ExternalLink, Trash2, Trash } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Link {
   id: string
@@ -87,6 +98,34 @@ export function LinkModeration() {
     }
   }
 
+  const hardDeleteLink = async (linkId: string) => {
+    try {
+      const response = await fetch(`/api/admin/links/${linkId}`, {
+        method: "DELETE",
+      })
+      if (response.ok) {
+        toast({
+          title: "ลิงก์ถูกลบออกถาวร",
+          description: "ลิงก์ถูกลบออกจากระบบเรียบร้อยแล้ว",
+        })
+        fetchLinks()
+      } else {
+        const data = await response.json()
+        toast({
+          title: "เกิดข้อผิดพลาด",
+          description: data.error || "ไม่สามารถลบลิงก์ได้",
+          variant: "destructive",
+        })
+      }
+    } catch {
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "มีบางอย่างผิดพลาด กรุณาลองใหม่อีกครั้ง",
+        variant: "destructive",
+      })
+    }
+  }
+
   useEffect(() => {
     fetchLinks()
   }, [page, searchTerm, fetchLinks])
@@ -159,6 +198,33 @@ export function LinkModeration() {
                   <Button size="sm" variant="outline" onClick={() => deactivateLink(link.id)}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
+                )}
+
+                {!link.isActive && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="sm" variant="destructive">
+                        <Trash className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>ลบลิงก์ถาวร</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          การกระทำนี้ไม่สามารถยกเลิกได้ ลิงก์จะถูกลบออกจากระบบอย่างถาวรพร้อมกับข้อมูลสถิติทั้งหมด
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => hardDeleteLink(link.id)}
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        >
+                          ลบถาวร
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 )}
               </div>
             </div>

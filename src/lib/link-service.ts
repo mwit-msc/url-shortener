@@ -1,6 +1,6 @@
 import { prisma } from "./prisma"
 import { generateUniqueShortCode, isShortCodeAvailable, isValidUrl, isValidShortCode } from "./shortcode"
-import { UserRole } from "@prisma/client"
+import { UserRole, DomainRestriction } from "@prisma/client"
 
 export interface CreateLinkParams {
   originalUrl: string
@@ -37,13 +37,30 @@ export async function createLink(params: CreateLinkParams): Promise<CreateLinkRe
     return { success: false, error: "Invalid URL format" }
   }
 
-  // Get domain info
+  // Get domain info with restrictions
   const domain = await prisma.domain.findUnique({
     where: { id: domainId, isActive: true },
+    include: {
+      allowedUsers: {
+        select: { userId: true }
+      }
+    }
   })
 
   if (!domain) {
     return { success: false, error: "Domain not found or inactive" }
+  }
+
+  // Check domain restrictions
+  const isAdmin = userRole === UserRole.ADMIN
+  const canUseDomain = 
+    domain.restriction === DomainRestriction.EVERYONE ||
+    (domain.restriction === DomainRestriction.ADMIN_ONLY && isAdmin) ||
+    (domain.restriction === DomainRestriction.SPECIFIC_USERS && 
+     domain.allowedUsers.some(allowedUser => allowedUser.userId === userId))
+
+  if (!canUseDomain) {
+    return { success: false, error: "You don't have permission to use this domain" }
   }
 
   // Check user's link limit (for regular users)

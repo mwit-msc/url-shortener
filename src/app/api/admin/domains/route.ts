@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth-utils"
 import { prisma } from "@/lib/prisma"
+import { DomainRestriction } from "@prisma/client"
 
 export async function GET() {
   try {
@@ -11,6 +12,13 @@ export async function GET() {
         _count: {
           select: { links: true },
         },
+        allowedUsers: {
+          include: {
+            user: {
+              select: { id: true, name: true, email: true }
+            }
+          }
+        }
       },
       orderBy: { domain: "asc" },
     })
@@ -25,7 +33,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     await requireAdmin()
-    const { domain } = await request.json()
+    const { domain, restriction = "EVERYONE" } = await request.json()
 
     if (!domain || typeof domain !== "string") {
       return NextResponse.json({ error: "Domain is required" }, { status: 400 })
@@ -37,10 +45,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid domain format" }, { status: 400 })
     }
 
+    const validRestrictions: DomainRestriction[] = ["EVERYONE", "ADMIN_ONLY", "SPECIFIC_USERS"]
+    if (!validRestrictions.includes(restriction as DomainRestriction)) {
+      return NextResponse.json({ error: "Invalid restriction type" }, { status: 400 })
+    }
+
     const newDomain = await prisma.domain.create({
       data: {
         domain: domain.toLowerCase(),
         isActive: true,
+        restriction: restriction as DomainRestriction,
       },
     })
 

@@ -19,3 +19,32 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params
+    await requireAdmin()
+
+    const link = await prisma.link.findUnique({
+      where: { id },
+      select: { isActive: true }
+    })
+
+    if (!link) {
+      return NextResponse.json({ error: "Link not found" }, { status: 404 })
+    }
+
+    if (link.isActive) {
+      return NextResponse.json({ error: "Cannot delete active links. Deactivate first." }, { status: 400 })
+    }
+
+    await prisma.link.delete({
+      where: { id }
+    })
+
+    return NextResponse.json({ message: "Link permanently deleted" })
+  } catch (error) {
+    console.error("Error deleting link:", error)
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+  }
+}
