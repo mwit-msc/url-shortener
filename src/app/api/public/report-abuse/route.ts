@@ -1,25 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
-import crypto from "crypto"
 
-function hashIp(ip: string): string {
-  return crypto.createHash("sha256").update(ip).digest("hex")
-}
-
-function getClientIp(request: NextRequest): string | null {
-  const forwarded = request.headers.get("x-forwarded-for")
-  const realIp = request.headers.get("x-real-ip")
-  
-  if (forwarded) {
-    return forwarded.split(",")[0].trim()
-  }
-  
-  if (realIp) {
-    return realIp.trim()
-  }
-  
-  return null
-}
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,41 +38,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Link not found" }, { status: 404 })
     }
 
-    // Check for duplicate reports from the same IP in the last hour
-    const clientIp = getClientIp(request)
-    const hashedIp = clientIp ? hashIp(clientIp) : null
-    
-    if (hashedIp) {
-      const recentReport = await prisma.abuseReport.findFirst({
-        where: {
-          linkId: link.id,
-          reporterIp: hashedIp,
-          createdAt: {
-            gte: new Date(Date.now() - 60 * 60 * 1000) // Last hour
-          }
-        }
-      })
-
-      if (recentReport) {
-        return NextResponse.json({ error: "You have already reported this link recently" }, { status: 429 })
-      }
-    }
-
-    // Rate limiting: max 5 reports per IP per day
-    if (hashedIp) {
-      const dailyReports = await prisma.abuseReport.count({
-        where: {
-          reporterIp: hashedIp,
-          createdAt: {
-            gte: new Date(Date.now() - 24 * 60 * 60 * 1000) // Last 24 hours
-          }
-        }
-      })
-
-      if (dailyReports >= 5) {
-        return NextResponse.json({ error: "Daily report limit exceeded" }, { status: 429 })
-      }
-    }
+    // Note: IP-based rate limiting removed for privacy
 
     // Create the abuse report
     const abuseReport = await prisma.abuseReport.create({
@@ -100,7 +47,7 @@ export async function POST(request: NextRequest) {
         reportType,
         description: description?.slice(0, 1000), // Limit description length
         reporterEmail: reporterEmail?.slice(0, 255), // Limit email length
-        reporterIp: hashedIp,
+        reporterIp: null,
       }
     })
 

@@ -139,7 +139,7 @@ model CustomLinkRequest {
 model LinkAnalytics {
   id        String   @id @default(cuid())
   linkId    String
-  ipAddress String?  // Hashed for privacy
+  ipAddress String?  // Not used for privacy reasons
   userAgent String?
   referer   String?
   country   String?
@@ -172,7 +172,7 @@ enum DomainRestriction {
 model AbuseReport {
   id          String            @id @default(cuid())
   linkId      String
-  reporterIp  String?           // Optional IP address of reporter (hashed for privacy)
+  reporterIp  String?           // Not used for privacy reasons
   reporterEmail String?         // Optional email for follow-up
   reportType  AbuseReportType
   description String?           @db.Text // Additional details from reporter

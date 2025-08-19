@@ -18,9 +18,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const userAgent = headersList.get("user-agent") || ""
     const referer = headersList.get("referer") || ""
 
-    // Get client IP (considering proxies)
-    const forwarded = headersList.get("x-forwarded-for")
-    const ipAddress = forwarded ? forwarded.split(",")[0] : headersList.get("x-real-ip") || ""
 
     const link = await getLinkByShortCode(shortCode, domain)
 
@@ -84,7 +81,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Record analytics and increment click count
     await incrementClickCount(link.id, {
-      ipAddress: ipAddress ? hashIP(ipAddress) : undefined,
+      ipAddress: undefined,
       userAgent,
       referer,
       // You can add geolocation data here if needed
@@ -151,13 +148,3 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   }
 }
 
-// Simple hash function for IP addresses (for privacy)
-function hashIP(ip: string): string {
-  let hash = 0
-  for (let i = 0; i < ip.length; i++) {
-    const char = ip.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash // Convert to 32-bit integer
-  }
-  return hash.toString()
-}

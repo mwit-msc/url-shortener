@@ -68,7 +68,6 @@ export default function PrivacyPolicy() {
 
                   <h3 className="text-xl font-medium mb-3 mt-6">2.3 ข้อมูลการวิเคราะห์</h3>
                   <ul className="space-y-1 text-muted-foreground ml-6">
-                    <li>• ที่อยู่ IP (เก็บในรูปแบบ Hash เพื่อความเป็นส่วนตัว)</li>
                     <li>• User Agent ของเบราว์เซอร์</li>
                     <li>• เว็บไซต์อ้างอิง (Referer)</li>
                     <li>• เวลาที่คลิกลิงก์</li>
@@ -94,10 +93,6 @@ export default function PrivacyPolicy() {
                     ข้อมูลทั้งหมดถูกเข้ารหัสในระหว่างการส่งผ่าน (HTTPS) และจัดเก็บในฐานข้อมูลที่มีความปลอดภัย
                   </p>
 
-                  <h3 className="text-xl font-medium mb-3">4.2 การ Hash ที่อยู่ IP</h3>
-                  <p className="text-muted-foreground leading-relaxed mb-4">
-                    ที่อยู่ IP ถูกแปลงเป็น Hash ด้วย SHA-256 เพื่อป้องกันการระบุตัวตนย้อนกลับ
-                  </p>
 
                   <h3 className="text-xl font-medium mb-3">4.3 การจำกัดการเข้าถึง</h3>
                   <p className="text-muted-foreground leading-relaxed">
@@ -187,7 +182,7 @@ export default function PrivacyPolicy() {
                       <h4 className="font-medium text-foreground mb-2">สิ่งที่เราทำ</h4>
                       <ul className="space-y-1">
                         <li>✓ เข้ารหัสข้อมูลทั้งหมด</li>
-                        <li>✓ Hash ที่อยู่ IP เพื่อความเป็นส่วนตัว</li>
+                        <li>✓ ไม่เก็บที่อยู่ IP เพื่อความเป็นส่วนตัว</li>
                         <li>✓ จำกัดการเข้าถึงข้อมูล</li>
                         <li>✓ ให้สิทธิ์ผู้ใช้ควบคุมข้อมูล</li>
                       </ul>
