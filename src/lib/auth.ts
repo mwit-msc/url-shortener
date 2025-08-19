@@ -11,6 +11,14 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+          hd: "mwit.ac.th",
+        },
+      },
     }),
   ],
   callbacks: {
@@ -31,7 +39,7 @@ export const authOptions: AuthOptions = {
     async signIn({ account, profile }) {
       if (account?.provider === "google" && profile?.email) {
         const emailDomain = profile.email.split("@")[1];
-        if (emailDomain !== "mwit.ac.th") return "/auth/login?error=OAuthSignin";
+        if (emailDomain !== "mwit.ac.th") return "/auth/error?error=OAuthSignin";
         return true;
       }
       return false;

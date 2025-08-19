@@ -5,16 +5,16 @@ import { validateHost, createHostValidationResponse } from "@/lib/host-validatio
 
 const handler = NextAuth(authOptions)
 
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest, { params }: { params: { nextauth: string[] } }) {
   if (!validateHost(request)) {
     return createHostValidationResponse()
   }
-  return handler(request)
+  return handler(request, { params })
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest, { params }: { params: { nextauth: string[] } }) {
   if (!validateHost(request)) {
     return createHostValidationResponse()
   }
-  return handler(request)
+  return handler(request, { params })
 }
