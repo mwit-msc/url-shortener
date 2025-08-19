@@ -5,14 +5,16 @@ import { headers } from "next/headers"
 export async function GET(request: NextRequest, { params }: { params: Promise<{ shortCode: string }> }) {
   try {
     const { shortCode } = await params
-    const { searchParams } = new URL(request.url)
-    const domain = searchParams.get("domain")
-
+    const headersList = await headers()
+    
+    // Auto-detect domain from HOST header
+    const host = headersList.get("host") || ""
+    const domain = host.split(':')[0] // Remove port if present
+    
     if (!domain) {
-      return NextResponse.json({ error: "Domain not specified" }, { status: 400 })
+      return NextResponse.json({ error: "Unable to determine domain" }, { status: 400 })
     }
 
-    const headersList = await headers()
     const userAgent = headersList.get("user-agent") || ""
     const referer = headersList.get("referer") || ""
 
@@ -29,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         <!DOCTYPE html>
         <html>
           <head>
-            <title>Link Not Found - MWIT Link</title>
+            <title>Link Not Found - MWIT TINY</title>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             <div class="container">
               <h1>Link Not Found</h1>
               <p>The short link you're looking for doesn't exist or has been removed.</p>
-              <a href="/">Go to MWIT Link</a>
+              <a href="/">Go to MWIT TINY</a>
             </div>
           </body>
         </html>
@@ -97,7 +99,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Error - MWIT Link</title>
+          <title>Error - MWIT TINY</title>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1">
           <style>
