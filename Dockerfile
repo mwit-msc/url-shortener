@@ -13,7 +13,7 @@ WORKDIR /app
 # Install dependencies based on the preferred package manager
 COPY package.json bun.lockb* yarn.lock* package-lock.json* pnpm-lock.yaml* ./
 
-RUN bun install --production
+RUN bun install 
 
 # Rebuild the source code only when needed
 FROM base AS builder
