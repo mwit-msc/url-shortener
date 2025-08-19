@@ -41,7 +41,7 @@ export function middleware(request: NextRequest) {
   if (shortCodeMatch && host) {
     const shortCode = shortCodeMatch[1]
 
-    const knownRoutes = ["dashboard", "admin", "auth", "unauthorized", "api"]
+    const knownRoutes = ["dashboard", "admin", "auth", "unauthorized", "api", "tos", "privacy", "report"]
 
     if (knownRoutes.includes(shortCode)) {
       return NextResponse.next()

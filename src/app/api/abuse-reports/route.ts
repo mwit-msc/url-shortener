@@ -98,8 +98,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const page = Number.parseInt(searchParams.get("page") || "1")
     const limit = Number.parseInt(searchParams.get("limit") || "20")
-    const status = searchParams.get("status")
-    const reportType = searchParams.get("reportType")
+    const status = searchParams.get("status") == "all" ? undefined : searchParams.get("status")
+    const reportType = searchParams.get("reportType") == "all" ? undefined : searchParams.get("reportType")
 
     const where: { status?: AbuseReportStatus; reportType?: AbuseReportType } = {}
     if (status && Object.values(AbuseReportStatus).includes(status as AbuseReportStatus)) {

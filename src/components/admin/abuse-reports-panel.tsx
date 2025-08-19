@@ -78,8 +78,8 @@ export function AbuseReportsPanel() {
   const [newStatus, setNewStatus] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [filter, setFilter] = useState({
-    status: "",
-    reportType: ""
+    status: "all",
+    reportType: "all"
   })
 
   useEffect(() => {
@@ -157,7 +157,7 @@ export function AbuseReportsPanel() {
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
             {Object.entries(statusLabels).map(([value, label]) => (
               <SelectItem key={value} value={value}>{label}</SelectItem>
             ))}
@@ -169,7 +169,7 @@ export function AbuseReportsPanel() {
             <SelectValue placeholder="Filter by type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Types</SelectItem>
+            <SelectItem value="all">All Types</SelectItem>
             {Object.entries(reportTypeLabels).map(([value, label]) => (
               <SelectItem key={value} value={value}>{label}</SelectItem>
             ))}

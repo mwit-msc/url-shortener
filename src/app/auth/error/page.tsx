@@ -13,13 +13,13 @@ export default function AuthError() {
   const getErrorMessage = (error: string | null) => {
     switch (error) {
       case "Configuration":
-        return "There is a problem with the server configuration."
+        return "มีปัญหาเกี่ยวกับการตั้งค่าเซิร์ฟเวอร์"
       case "AccessDenied":
-        return "Access denied. You do not have permission to sign in."
+        return "การเข้าถึงถูกปฏิเสธ คุณไม่มีสิทธิ์ในการเข้าสู่ระบบ"
       case "Verification":
-        return "The verification token has expired or has already been used."
+        return "โทเค็นการยืนยันหมดอายุหรือถูกใช้ไปแล้ว"
       default:
-        return "An error occurred during authentication."
+        return "เกิดข้อผิดพลาดระหว่างการยืนยันตัวตน"
     }
   }
 
@@ -30,12 +30,14 @@ export default function AuthError() {
       </div>
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-destructive">Authentication Error</CardTitle>
+          <CardTitle className="text-2xl font-bold text-destructive">
+            การเข้าสู่ระบบล้มเหลว
+          </CardTitle>
           <CardDescription>{getErrorMessage(error)}</CardDescription>
         </CardHeader>
         <CardContent className="text-center">
           <Button asChild>
-            <Link href="/auth/signin">Try Again</Link>
+            <Link href="/auth/signin">ลองอีกครั้ง</Link>
           </Button>
         </CardContent>
       </Card>
