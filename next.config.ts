@@ -1,7 +1,6 @@
 const nextConfig = {
   experimental: {
   },
-
   async headers() {
     return [
       {
@@ -23,7 +22,6 @@ const nextConfig = {
       },
     ]
   },
-
   async rewrites() {
     return [
       {
@@ -38,9 +36,9 @@ const nextConfig = {
       },
     ]
   },
-  ... process.env.USEDOCKER === 'true' ? {
-      outputFileTracingRoot: '/app',
-      output: 'standalone',
+  ...process.env.USEDOCKER === 'true' ? {
+    outputFileTracingRoot: '/app',
+    output: 'standalone',
   } : {},
   images: {
     unoptimized: true,
