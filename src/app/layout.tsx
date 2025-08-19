@@ -13,8 +13,8 @@ const athti = Athiti({
 });
 
 export const metadata: Metadata = {
-  title: "URL Shortener | MWIT-LINK",
-  description: "MWIT-LINK URL Shortener Service",
+  title: "MWIT TINY - URL Shortener",
+  description: "MWIT TINY ระบบย่อ URL โดยคณะกรรมการนักเรียน โรงเรียนมหิดลวิทยานุสรณ์",
 };
 
 export default function RootLayout({

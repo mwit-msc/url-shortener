@@ -138,20 +138,23 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
   const canUseCustom = user.role === UserRole.SPECIAL_USER || user.role === UserRole.ADMIN
 
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>สร้างลิงก์สั้น</CardTitle>
-          <CardDescription>
+    <div className="space-y-6 sm:space-y-8">
+      <Card className="shadow-sm">
+        <CardHeader className="space-y-3">
+          <CardTitle className="text-xl sm:text-2xl">สร้างลิงก์สั้น</CardTitle>
+          <CardDescription className="text-base sm:text-lg">
             {user.role === UserRole.USER && `คุณสามารถสร้างลิงก์ได้สูงสุด ${user.linkLimit} ลิงก์`}
             {user.role === UserRole.SPECIAL_USER && "คุณสามารถสร้างลิงก์ได้ไม่จำกัด"}
             {user.role === UserRole.ADMIN && "คุณมีสิทธิ์เข้าถึงฟีเจอร์ทั้งหมด"}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="originalUrl">URL เดิม *</Label>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Original URL Input */}
+            <div className="space-y-3">
+              <Label htmlFor="originalUrl" className="text-base font-medium">
+                URL เดิม *
+              </Label>
               <Input
                 id="originalUrl"
                 type="url"
@@ -159,18 +162,22 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
                 value={originalUrl}
                 onChange={(e) => setOriginalUrl(e.target.value)}
                 required
+                className="h-12 text-base"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="domain">โดเมน *</Label>
+            {/* Domain Selection */}
+            <div className="space-y-3">
+              <Label htmlFor="domain" className="text-base font-medium">
+                โดเมน *
+              </Label>
               <Select value={selectedDomain} onValueChange={setSelectedDomain} required>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 text-base">
                   <SelectValue placeholder="เลือกโดเมน" />
                 </SelectTrigger>
                 <SelectContent>
                   {domains.map((domain) => (
-                    <SelectItem key={domain.id} value={domain.id}>
+                    <SelectItem key={domain.id} value={domain.id} className="text-base">
                       {domain.domain}
                     </SelectItem>
                   ))}
@@ -178,96 +185,142 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
               </Select>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="useCustom"
-                checked={useCustom}
-                onCheckedChange={setUseCustom}
-                disabled={!canUseCustom && user.role === UserRole.USER}
-              />
-              <Label htmlFor="useCustom">
-                ใช้รหัสสั้นแบบกำหนดเอง
-                {!canUseCustom && user.role === UserRole.USER && " (ต้องได้รับการอนุมัติ)"}
-              </Label>
-            </div>
-
-            {useCustom && (
-              <div className="space-y-2">
-                <Label htmlFor="customShortCode">รหัสสั้นแบบกำหนดเอง</Label>
-                <Input
-                  id="customShortCode"
-                  placeholder="my-custom-link"
-                  value={customShortCode}
-                  onChange={(e) => setCustomShortCode(e.target.value)}
-                  pattern="[a-zA-Z0-9_-]{3,20}"
-                  title="3-20 ตัวอักษร ใช้ตัวอักษร ตัวเลข เครื่องหมายขีดกลาง และขีดล่างเท่านั้น"
+            {/* Custom Short Code Toggle */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3 p-4 border rounded-lg bg-muted/30">
+                <Switch
+                  id="useCustom"
+                  checked={useCustom}
+                  onCheckedChange={setUseCustom}
+                  disabled={!canUseCustom && user.role === UserRole.USER}
                 />
-                {!canUseCustom && (
-                  <Alert>
-                    <AlertDescription>รหัสสั้นแบบกำหนดเองต้องได้รับการอนุมัติจากผู้ดูแลระบบสำหรับผู้ใช้ทั่วไป</AlertDescription>
-                  </Alert>
-                )}
+                <Label htmlFor="useCustom" className="text-base font-medium cursor-pointer">
+                  ใช้รหัสสั้นแบบกำหนดเอง
+                  {!canUseCustom && user.role === UserRole.USER && (
+                    <span className="text-sm text-muted-foreground block">
+                      (ต้องได้รับการอนุมัติ)
+                    </span>
+                  )}
+                </Label>
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="title">หัวข้อ (ไม่บังคับ)</Label>
-              <Input id="title" placeholder="หัวข้อลิงก์" value={title} onChange={(e) => setTitle(e.target.value)} />
+              {useCustom && (
+                <div className="space-y-3">
+                  <Label htmlFor="customShortCode" className="text-base font-medium">
+                    รหัสสั้นแบบกำหนดเอง
+                  </Label>
+                  <Input
+                    id="customShortCode"
+                    placeholder="my-custom-link"
+                    value={customShortCode}
+                    onChange={(e) => setCustomShortCode(e.target.value)}
+                    pattern="[a-zA-Z0-9_-]{3,20}"
+                    title="3-20 ตัวอักษร ใช้ตัวอักษร ตัวเลข เครื่องหมายขีดกลาง และขีดล่างเท่านั้น"
+                    className="h-12 text-base"
+                  />
+                  {!canUseCustom && (
+                    <Alert className="border-amber-200 bg-amber-50">
+                      <AlertDescription className="text-base">
+                        รหัสสั้นแบบกำหนดเองต้องได้รับการอนุมัติจากผู้ดูแลระบบสำหรับผู้ใช้ทั่วไป
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="description">คำอธิบาย (ไม่บังคับ)</Label>
-              <Textarea
-                id="description"
-                placeholder="คำอธิบายลิงก์"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-              />
+            {/* Optional Fields */}
+            <div className="space-y-6 pt-6 border-t">
+              <h4 className="text-lg font-medium text-muted-foreground">ข้อมูลเพิ่มเติม (ไม่บังคับ)</h4>
+              
+              <div className="space-y-3">
+                <Label htmlFor="title" className="text-base font-medium">
+                  หัวข้อ
+                </Label>
+                <Input 
+                  id="title" 
+                  placeholder="หัวข้อสำหรับลิงก์นี้" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="h-12 text-base" 
+                />
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="description" className="text-base font-medium">
+                  คำอธิบาย
+                </Label>
+                <Textarea
+                  id="description"
+                  placeholder="คำอธิบายเกี่ยวกับลิงก์นี้..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  className="text-base resize-none"
+                />
+              </div>
             </div>
 
-            <Button type="submit" disabled={isLoading} className="w-full">
+            {/* Submit Button */}
+            <Button 
+              type="submit" 
+              disabled={isLoading} 
+              className="w-full h-12 text-base font-medium"
+              size="lg"
+            >
               {isLoading ? "กำลังสร้าง..." : "สร้างลิงก์สั้น"}
             </Button>
           </form>
         </CardContent>
       </Card>
 
+      {/* Success Result */}
       {result && result.link && (
-        <Card>
+        <Card className="shadow-sm border-green-200 bg-green-50">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              สร้างลิงก์สำเร็จ!
+            <CardTitle className="flex items-center gap-3 text-green-700">
+              <CheckCircle className="h-6 w-6" />
+              <span className="text-xl">สร้างลิงก์สำเร็จ!</span>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                <code className="flex-1 text-sm">{result.link.fullUrl}</code>
-                <Button size="sm" variant="outline" onClick={() => result.link && copyToClipboard(result.link.fullUrl)} disabled={!result.link}>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-white rounded-lg border">
+              <code className="flex-1 text-base font-mono break-all">{result.link.fullUrl}</code>
+              <div className="flex gap-2 shrink-0">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => result.link && copyToClipboard(result.link.fullUrl)} 
+                  disabled={!result.link}
+                  className="h-9"
+                >
                   <Copy className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-2">คัดลอก</span>
                 </Button>
-                <Button size="sm" variant="outline" asChild>
+                <Button size="sm" variant="outline" asChild className="h-9">
                   <a href={result.link.fullUrl} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
+                    <span className="hidden sm:inline ml-2">เปิด</span>
                   </a>
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground">URL เดิม: {result.link.originalUrl}</p>
             </div>
+            <p className="text-base text-muted-foreground">
+              <span className="font-medium">URL เดิม:</span> {result.link.originalUrl}
+            </p>
           </CardContent>
         </Card>
       )}
 
+      {/* Custom Request Pending */}
       {result && result.customRequest && (
-        <Card>
+        <Card className="shadow-sm border-amber-200 bg-amber-50">
           <CardHeader>
-            <CardTitle>ส่งคำขอลิงก์กำหนดเองแล้ว</CardTitle>
+            <CardTitle className="text-xl text-amber-700">ส่งคำขอลิงก์กำหนดเองแล้ว</CardTitle>
           </CardHeader>
           <CardContent>
-            <Alert>
-              <AlertDescription>
+            <Alert className="border-amber-200 bg-white">
+              <AlertDescription className="text-base">
                 คำขอรหัสสั้นแบบกำหนดเองของคุณได้ถูกส่งแล้วและกำลังรอการอนุมัติจากผู้ดูแลระบบ 
                 คุณจะได้รับการแจ้งเตือนเมื่อได้รับการตรวจสอบแล้ว
               </AlertDescription>

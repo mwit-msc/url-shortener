@@ -11,14 +11,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CheckCircle, AlertTriangle, Flag } from "lucide-react"
 
 const reportTypes = {
-  SPAM: "สแปมหรือเนื้อหาที่ไม่พึงประสงค์",
-  MALWARE: "มัลแวร์หรือการหลอกลวงทางอินเทอร์เน็ต",
-  ILLEGAL: "เนื้อหาที่ผิดกฎหมาย",
-  COPYRIGHT: "การละเมิดลิขสิทธิ์",
-  HARASSMENT: "การคุกคามหรือการล่วงละเมิด",
-  ADULT_CONTENT: "เนื้อหาสำหรับผู้ใหญ่/ไม่เหมาะสม",
-  SCAM: "การหลอกลวงหรือฉ้อโกง",
-  OTHER: "อื่นๆ"
+  SPAM: "Spam or unwanted content",
+  MALWARE: "Malware or phishing attempts", 
+  ILLEGAL: "Illegal content",
+  COPYRIGHT: "Copyright infringement",
+  HARASSMENT: "Harassment or abuse",
+  ADULT_CONTENT: "Adult/inappropriate content",
+  SCAM: "Scam or fraud",
+  OTHER: "Other"
 }
 
 interface ReportAbuseFormProps {
@@ -66,7 +66,7 @@ export function ReportAbuseForm({ prefilledUrl, prefilledDomain, prefilledCode }
       }
 
       if (!shortCode || !domain) {
-        setError("ไม่สามารถระบุลิงก์ที่ต้องการรายงานได้ กรุณาตรวจสอบ URL อีกครั้ง")
+        setError("Unable to identify the link to report. Please check the URL again.")
         setIsSubmitting(false)
         return
       }
@@ -97,10 +97,10 @@ export function ReportAbuseForm({ prefilledUrl, prefilledDomain, prefilledCode }
           customUrl: ""
         })
       } else {
-        setError(data.error || "ไม่สามารถส่งรายงานได้")
+        setError(data.error || "Unable to submit report")
       }
     } catch {
-      setError("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่อีกครั้ง")
+      setError("Connection error. Please try again.")
     } finally {
       setIsSubmitting(false)
     }
@@ -120,17 +120,17 @@ export function ReportAbuseForm({ prefilledUrl, prefilledDomain, prefilledCode }
 
   if (isSubmitted) {
     return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col items-center justify-center py-8 space-y-4">
-            <CheckCircle className="w-16 h-16 text-green-500" />
-            <div className="text-center">
-              <h3 className="text-xl font-semibold">รายงานถูกส่งเรียบร้อยแล้ว</h3>
-              <p className="text-muted-foreground mt-2">
-                ขอบคุณที่ช่วยรักษาความปลอดภัยของบริการเรา ทีมงานจะตรวจสอบรายงานของคุณ
+      <Card className="shadow-lg">
+        <CardContent className="pt-8 sm:pt-12">
+          <div className="flex flex-col items-center justify-center py-12 sm:py-16 space-y-6">
+            <CheckCircle className="w-20 h-20 sm:w-24 sm:h-24 text-green-500" />
+            <div className="text-center space-y-4">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-semibold">Report Submitted Successfully</h3>
+              <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+                Thank you for helping keep our service safe. Our moderation team will review your report and take appropriate action.
               </p>
-              <Button onClick={resetForm} className="mt-4" variant="outline">
-                รายงานเพิ่มเติม
+              <Button onClick={resetForm} size="lg" className="mt-6 text-lg px-8 py-4 h-auto" variant="outline">
+                Submit Another Report
               </Button>
             </div>
           </div>
@@ -140,47 +140,50 @@ export function ReportAbuseForm({ prefilledUrl, prefilledDomain, prefilledCode }
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center gap-3">
-          <Flag className="w-6 h-6 text-red-500" />
+    <Card className="shadow-lg">
+      <CardHeader className="space-y-4">
+        <div className="flex items-center gap-4">
+          <Flag className="w-8 h-8 sm:w-10 sm:h-10 text-red-500" />
           <div>
-            <CardTitle>แบบฟอร์มรายงานการละเมิด</CardTitle>
-            <CardDescription>
-              กรอกข้อมูลด้านล่างเพื่อรายงานลิงก์ที่ไม่เหมาะสม
+            <CardTitle className="text-2xl sm:text-3xl lg:text-4xl">Report Abuse Form</CardTitle>
+            <CardDescription className="text-lg sm:text-xl lg:text-2xl">
+              Fill out the form below to report inappropriate or malicious links
             </CardDescription>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Link URL Input */}
           {!prefilledUrl && !prefilledCode && (
-            <div className="space-y-2">
-              <Label htmlFor="customUrl">URL ที่ต้องการรายงาน *</Label>
+            <div className="space-y-3">
+              <Label htmlFor="customUrl" className="text-lg sm:text-xl font-medium">
+                URL to Report *
+              </Label>
               <Input
                 id="customUrl"
                 type="url"
-                placeholder="https://example.com/abc123 หรือ example.com/abc123"
+                placeholder="https://example.com/abc123 or example.com/abc123"
                 value={formData.customUrl}
                 onChange={(e) => setFormData(prev => ({ ...prev, customUrl: e.target.value }))}
                 required={!prefilledUrl && !prefilledCode}
+                className="h-12 sm:h-14 text-base sm:text-lg"
               />
-              <p className="text-xs text-muted-foreground">
-                ใส่ลิงก์ย่อที่คุณต้องการรายงาน
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Enter the shortened link you want to report
               </p>
             </div>
           )}
 
           {/* Prefilled URL Display */}
           {(prefilledUrl || prefilledCode) && (
-            <div className="bg-muted p-4 rounded-lg">
-              <Label className="font-semibold">ลิงก์ที่ต้องการรายงาน:</Label>
-              <p className="font-mono text-sm break-all mt-1">
+            <div className="bg-muted p-6 rounded-lg space-y-3">
+              <Label className="text-lg sm:text-xl font-semibold">Link to Report:</Label>
+              <p className="font-mono text-base sm:text-lg break-all bg-background p-3 rounded border">
                 {prefilledDomain}/{prefilledCode}
               </p>
               {prefilledUrl && (
-                <p className="text-sm text-muted-foreground mt-1 break-all">
+                <p className="text-base sm:text-lg text-muted-foreground break-all">
                   → {prefilledUrl}
                 </p>
               )}
@@ -188,43 +191,52 @@ export function ReportAbuseForm({ prefilledUrl, prefilledDomain, prefilledCode }
           )}
 
           {/* Report Type */}
-          <div className="space-y-2">
-            <Label htmlFor="reportType">ประเภทการรายงาน *</Label>
+          <div className="space-y-3">
+            <Label htmlFor="reportType" className="text-lg sm:text-xl font-medium">
+              Report Type *
+            </Label>
             <Select 
               value={formData.reportType} 
               onValueChange={(value) => setFormData(prev => ({ ...prev, reportType: value }))}
               required
             >
-              <SelectTrigger>
-                <SelectValue placeholder="เลือกประเภทการรายงาน" />
+              <SelectTrigger className="h-12 sm:h-14 text-base sm:text-lg">
+                <SelectValue placeholder="Select report type" />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(reportTypes).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                  <SelectItem key={value} value={value} className="text-base sm:text-lg">
+                    {label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">รายละเอียดเพิ่มเติม</Label>
+          <div className="space-y-3">
+            <Label htmlFor="description" className="text-lg sm:text-xl font-medium">
+              Additional Details
+            </Label>
             <Textarea
               id="description"
-              placeholder="กรุณาอธิบายเพิ่มเติมเกี่ยวกับปัญหาที่พบ (ไม่บังคับ)"
+              placeholder="Please provide additional details about the issue (optional)"
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               maxLength={1000}
-              rows={4}
+              rows={5}
+              className="text-base sm:text-lg resize-none"
             />
-            <p className="text-xs text-muted-foreground">
-              {formData.description.length}/1000 ตัวอักษร
+            <p className="text-sm sm:text-base text-muted-foreground">
+              {formData.description.length}/1000 characters
             </p>
           </div>
 
           {/* Reporter Email */}
-          <div className="space-y-2">
-            <Label htmlFor="reporterEmail">อีเมลของคุณ (ไม่บังคับ)</Label>
+          <div className="space-y-3">
+            <Label htmlFor="reporterEmail" className="text-lg sm:text-xl font-medium">
+              Your Email (Optional)
+            </Label>
             <Input
               id="reporterEmail"
               type="email"
@@ -232,46 +244,49 @@ export function ReportAbuseForm({ prefilledUrl, prefilledDomain, prefilledCode }
               value={formData.reporterEmail}
               onChange={(e) => setFormData(prev => ({ ...prev, reporterEmail: e.target.value }))}
               maxLength={255}
+              className="h-12 sm:h-14 text-base sm:text-lg"
             />
-            <p className="text-xs text-muted-foreground">
-              ไม่บังคับ เราอาจติดต่อคุณเพื่อขอข้อมูลเพิ่มเติม
+            <p className="text-sm sm:text-base text-muted-foreground">
+              Optional. We may contact you for follow-up questions.
             </p>
           </div>
 
           {/* Error Alert */}
           {error && (
-            <Alert variant="destructive">
-              <AlertTriangle className="w-4 h-4" />
-              <AlertDescription>{error}</AlertDescription>
+            <Alert variant="destructive" className="border-red-200 bg-red-50">
+              <AlertTriangle className="w-5 h-5" />
+              <AlertDescription className="text-base sm:text-lg">{error}</AlertDescription>
             </Alert>
           )}
 
           {/* Submit Button */}
-          <div className="flex gap-2">
+          <div className="pt-4">
             <Button 
               type="submit" 
               disabled={isSubmitting || !formData.reportType || (!prefilledCode && !formData.customUrl)}
-              className="flex-1"
+              className="w-full h-14 sm:h-16 text-lg sm:text-xl font-medium"
+              size="lg"
             >
-              {isSubmitting ? "กำลังส่ง..." : "ส่งรายงาน"}
+              {isSubmitting ? "Submitting..." : "Submit Report"}
             </Button>
           </div>
         </form>
 
         {/* Information Section */}
-        <div className="mt-8 pt-6 border-t space-y-4">
-          <h4 className="font-semibold">สิ่งที่คุณสามารถรายงานได้</h4>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>• สแปมหรือเนื้อหาที่ไม่พึงประสงค์</li>
-            <li>• มัลแวร์หรือการหลอกลวงทางอินเทอร์เน็ต</li>
-            <li>• เนื้อหาที่ผิดกฎหมาย</li>
-            <li>• การละเมิดลิขสิทธิ์</li>
-            <li>• การคุกคามหรือการล่วงละเมิด</li>
-            <li>• เนื้อหาสำหรับผู้ใหญ่/ไม่เหมาะสม</li>
-            <li>• การหลอกลวงหรือฉ้อโกง</li>
+        <div className="mt-12 pt-8 border-t space-y-6">
+          <h4 className="text-xl sm:text-2xl font-semibold">What You Can Report</h4>
+          <ul className="text-base sm:text-lg text-muted-foreground space-y-2">
+            <li>• Spam or unwanted content</li>
+            <li>• Malware or phishing attempts</li>
+            <li>• Illegal content</li>
+            <li>• Copyright infringement</li>
+            <li>• Harassment or abuse</li>
+            <li>• Adult/inappropriate content</li>
+            <li>• Scam or fraud</li>
+            <li>• Other violations</li>
           </ul>
-          <p className="text-sm text-muted-foreground">
-            รายงานทั้งหมดจะได้รับการตรวจสอบโดยทีมควบคุมของเรา ขอบคุณที่ช่วยรักษาความปลอดภัยของบริการเรา
+          <p className="text-base sm:text-lg text-muted-foreground">
+            All reports will be reviewed by our moderation team. Thank you for helping keep our service safe and secure.
           </p>
         </div>
       </CardContent>

@@ -12,32 +12,54 @@ export default async function DashboardPage() {
     <div className="min-h-screen bg-background">
       <DashboardHeader user={user} />
 
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">แดชบอร์ด</h1>
-          <p className="text-muted-foreground">สร้างและจัดการลิงก์สั้นของคุณ</p>
+      <div className="container mx-auto px-4 py-6 sm:py-8">
+        {/* Welcome Section */}
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4">
+            แดชบอร์ด
+          </h1>
+          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl">
+            สร้างและจัดการลิงก์สั้นของคุณ พร้อมติดตามสถิติการใช้งาน
+          </p>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        {/* Main Content */}
+        <div className="grid gap-6 lg:gap-8 xl:grid-cols-4">
+          {/* Stats Section - Full width on mobile, sidebar on desktop */}
+          <div className="xl:col-span-1 xl:order-2">
+            <DashboardStats userId={user.id} userRole={user.role} linkLimit={user.linkLimit} />
+          </div>
+
+          {/* Main Content Area */}
+          <div className="xl:col-span-3 xl:order-1">
             <Tabs defaultValue="create" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="create">สร้างลิงก์</TabsTrigger>
-                <TabsTrigger value="links">ลิงก์ของฉัน</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 h-12 text-base">
+                <TabsTrigger value="create" className="text-sm sm:text-base">
+                  สร้างลิงก์ใหม่
+                </TabsTrigger>
+                <TabsTrigger value="links" className="text-sm sm:text-base">
+                  ลิงก์ของฉัน
+                </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="create">
+              <TabsContent value="create" className="space-y-0">
                 <CreateLinkForm user={user} />
               </TabsContent>
 
-              <TabsContent value="links">
+              <TabsContent value="links" className="space-y-0">
                 <LinksList userId={user.id} userRole={user.role} />
               </TabsContent>
             </Tabs>
           </div>
+        </div>
 
-          <div className="lg:col-span-1">
-            <DashboardStats userId={user.id} userRole={user.role} linkLimit={user.linkLimit} />
+        {/* Quick Help Section */}
+        <div className="mt-12 pt-8 border-t">
+          <div className="text-center space-y-4">
+            <h3 className="text-lg sm:text-xl font-semibold">ต้องการความช่วยเหลือ?</h3>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+              หากคุณพบปัญหาในการใช้งานหรือต้องการคำแนะนำ สามารถติดต่อทีมสนับสนุนได้
+            </p>
           </div>
         </div>
       </div>
