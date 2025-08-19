@@ -24,7 +24,7 @@ export default function Footer() {
           <div className="flex flex-col space-y-2 md:items-end">
             <div className="flex space-x-4 text-sm">
               <Link 
-                href="/report-abuse" 
+                href="/report" 
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 รายงานการละเมิด

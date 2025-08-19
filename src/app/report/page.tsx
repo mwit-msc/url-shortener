@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ReportAbuseDialog } from "@/components/public/report-abuse-dialog"
+import { ReportAbuseForm } from "@/components/public/report-abuse-form"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Shield, AlertTriangle } from "lucide-react"
@@ -17,88 +18,100 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
   const { url, domain, code } = await searchParams
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="min-h-screen bg-background p-4">
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
       
-      <Card className="w-full max-w-2xl">
-        <CardHeader className="text-center">
+      <div className="max-w-4xl mx-auto py-8">
+        {/* Header */}
+        <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <Shield className="w-12 h-12 text-red-500" />
+            <Shield className="w-16 h-16 text-red-500" />
           </div>
-          <CardTitle className="text-2xl font-bold">รายงานการละเมิด</CardTitle>
-          <CardDescription>
+          <h1 className="text-3xl font-bold mb-2">รายงานการละเมิด</h1>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
             ช่วยเรารักษาความปลอดภัยของบริการย่อ URL โดยการรายงานเนื้อหาที่ไม่เหมาะสม
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {url && domain && code ? (
-            <div>
-              <div className="bg-muted p-4 rounded-lg mb-6">
-                <h3 className="font-semibold mb-2">ลิงก์ที่ต้องการรายงาน:</h3>
-                <p className="font-mono text-sm break-all">{domain}/{code}</p>
-                {url && (
-                  <p className="text-sm text-muted-foreground mt-1 break-all">
-                    → {url}
-                  </p>
-                )}
-              </div>
-              
-              <div className="flex justify-center">
-                <ReportAbuseDialog 
-                  shortCode={code} 
-                  domain={domain}
-                  trigger={
-                    <Button size="lg" className="w-full sm:w-auto">
-                      <AlertTriangle className="w-5 h-5 mr-2" />
-                      รายงานลิงก์นี้
-                    </Button>
-                  }
+          </p>
+        </div>
+
+        {/* Main Content */}
+        <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-1">
+          {/* Report Form */}
+          <div className="space-y-6">
+            {url && domain && code ? (
+              // Specific link report with dialog
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-amber-500" />
+                      รายงานลิงก์เฉพาะ
+                    </CardTitle>
+                    <CardDescription>
+                      คุณกำลังรายงานลิงก์เฉพาะที่ระบุในพารามิเตอร์
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="bg-muted p-4 rounded-lg mb-6">
+                      <h3 className="font-semibold mb-2">ลิงก์ที่ต้องการรายงาน:</h3>
+                      <p className="font-mono text-sm break-all">{domain}/{code}</p>
+                      {url && (
+                        <p className="text-sm text-muted-foreground mt-1 break-all">
+                          → {url}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="flex justify-center">
+                      <ReportAbuseDialog 
+                        shortCode={code} 
+                        domain={domain}
+                        trigger={
+                          <Button size="lg">
+                            <AlertTriangle className="w-5 h-5 mr-2" />
+                            รายงานลิงก์นี้
+                          </Button>
+                        }
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Alternative: Full form for specific link */}
+                <ReportAbuseForm 
+                  prefilledUrl={url}
+                  prefilledDomain={domain}
+                  prefilledCode={code}
                 />
               </div>
-            </div>
-          ) : (
-            <div className="text-center space-y-4">
-              <div className="bg-muted p-4 rounded-lg">
-                <h3 className="font-semibold mb-2">วิธีการรายงานลิงก์</h3>
-                <p className="text-sm text-muted-foreground">
-                  หากต้องการรายงานลิงก์เฉพาะ กรุณาเข้าไปที่ลิงก์นั้นก่อน หรือติดต่อเราพร้อม URL เต็ม
-                </p>
-              </div>
-              
-              <div className="space-y-3">
-                <h4 className="font-semibold">สิ่งที่คุณสามารถรายงานได้</h4>
-                <ul className="text-sm text-muted-foreground space-y-1 text-left">
-                  <li>• สแปมหรือเนื้อหาที่ไม่พึงประสงค์</li>
-                  <li>• มัลแวร์หรือการหลอกลวงทางอินเทอร์เน็ต</li>
-                  <li>• เนื้อหาที่ผิดกฎหมาย</li>
-                  <li>• การละเมิดลิขสิทธิ์</li>
-                  <li>• การคุกคามหรือการล่วงละเมิด</li>
-                  <li>• เนื้อหาสำหรับผู้ใหญ่/ไม่เหมาะสม</li>
-                  <li>• การหลอกลวงหรือฉ้อโกง</li>
-                </ul>
-              </div>
-            </div>
-          )}
+            ) : (
+              // General report form
+              <ReportAbuseForm />
+            )}
+          </div>
+        </div>
 
-          <div className="pt-4 border-t">
-            <div className="text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                รายงานทั้งหมดจะได้รับการตรวจสอบโดยทีมควบคุมของเรา ขอบคุณที่ช่วยรักษาความปลอดภัยของบริการเรา
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button asChild variant="outline">
-                  <Link href="/">หน้าหลัก</Link>
-                </Button>
-                <Button asChild variant="outline">
-                  <Link href="/dashboard">แดชบอร์ด</Link>
-                </Button>
-              </div>
+        {/* Navigation */}
+        <div className="mt-12 pt-8 border-t">
+          <div className="text-center space-y-4">
+            <div className="flex gap-4 justify-center flex-wrap">
+              <Button asChild variant="outline">
+                <Link href="/">หน้าหลัก</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/dashboard">แดชบอร์ด</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/tos">ข้อกำหนดการใช้งาน</Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/privacy">นโยบายความเป็นส่วนตัว</Link>
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
