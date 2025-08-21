@@ -26,13 +26,43 @@ export default async function AdminPage() {
         </div>
 
         <Tabs defaultValue="requests" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="requests">คำขอที่กำหนดเอง</TabsTrigger>
-            <TabsTrigger value="abuse">รายงานการละเมิด</TabsTrigger>
-            <TabsTrigger value="users">ผู้ใช้</TabsTrigger>
-            <TabsTrigger value="domains">โดเมน</TabsTrigger>
-            <TabsTrigger value="links">การกลั่นกรองลิงก์</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full min-w-max grid-cols-5 gap-x-1 md:gap-x-2">
+              <TabsTrigger 
+                value="requests" 
+                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              >
+                <span className="sm:hidden">คำขอ</span>
+                <span className="hidden sm:inline">คำขอที่กำหนดเอง</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="abuse" 
+                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              >
+                <span className="sm:hidden">รายงาน</span>
+                <span className="hidden sm:inline">รายงานการละเมิด</span>
+              </TabsTrigger>
+              <TabsTrigger 
+                value="users" 
+                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              >
+                ผู้ใช้
+              </TabsTrigger>
+              <TabsTrigger 
+                value="domains" 
+                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              >
+                โดเมน
+              </TabsTrigger>
+              <TabsTrigger 
+                value="links" 
+                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              >
+                <span className="sm:hidden">กลั่นกรอง</span>
+                <span className="hidden sm:inline">การกลั่นกรองลิงก์</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="requests">
             <CustomRequestsPanel />

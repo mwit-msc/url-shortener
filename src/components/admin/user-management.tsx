@@ -5,9 +5,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { UserRole } from "@prisma/client"
 import { useToast } from "@/hooks/use-toast"
-import { Search } from "lucide-react"
+import { Search, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface User {
   id: string
@@ -26,6 +28,8 @@ export function UserManagement() {
   const [isLoading, setIsLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
+  const [currentPage, setCurrentPage] = useState(1)
+  const [usersPerPage] = useState(10)
   const { toast } = useToast()
 
   useEffect(() => {
@@ -88,6 +92,24 @@ export function UserManagement() {
     return matchesSearch && matchesRole
   })
 
+  // Pagination calculations
+  const totalUsers = filteredUsers.length
+  const totalPages = Math.ceil(totalUsers / usersPerPage)
+  const startIndex = (currentPage - 1) * usersPerPage
+  const endIndex = startIndex + usersPerPage
+  const currentUsers = filteredUsers.slice(startIndex, endIndex).sort((a, b) => {
+    if (a.role === b.role) return 0
+    if (a.role === UserRole.ADMIN) return -1
+    if (b.role === UserRole.ADMIN) return 1
+    if (a.role === UserRole.SPECIAL_USER) return -1
+    if (b.role === UserRole.SPECIAL_USER) return 1
+    return 0
+  })
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, roleFilter])
+
   const getRoleBadge = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
@@ -117,7 +139,7 @@ export function UserManagement() {
           <CardDescription>จัดการสิทธิ์และบทบาทของผู้ใช้</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -128,7 +150,7 @@ export function UserManagement() {
               />
             </div>
             <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="กรองตามบทบาท" />
               </SelectTrigger>
               <SelectContent>
@@ -142,46 +164,130 @@ export function UserManagement() {
         </CardContent>
       </Card>
 
-      {filteredUsers.map((user) => (
-        <Card key={user.id}>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-medium">{user.name || "ไม่มีชื่อ"}</span>
-                  {getRoleBadge(user.role)}
-                </div>
+      <Card>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[200px]">ชื่อ</TableHead>
+                  <TableHead className="hidden sm:table-cell">อีเมล</TableHead>
+                  <TableHead className="w-[120px]">บทบาท</TableHead>
+                  <TableHead className="hidden md:table-cell text-right">ลิงก์</TableHead>
+                  <TableHead className="hidden lg:table-cell">เข้าร่วมเมื่อ</TableHead>
+                  <TableHead className="hidden xl:table-cell">ขีดจำกัด</TableHead>
+                  <TableHead className="w-[150px]">การจัดการ</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {currentUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      <div className="max-w-[180px] truncate">
+                        {user.name || "ไม่มีชื่อ"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden sm:table-cell">
+                      <div className="max-w-[200px] truncate text-muted-foreground">
+                        {user.email}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getRoleBadge(user.role)}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-right">
+                      {user._count.links}
+                    </TableCell>
+                    <TableCell className="hidden lg:table-cell text-sm text-muted-foreground">
+                      {new Date(user.createdAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="hidden xl:table-cell text-sm text-muted-foreground">
+                      {user.role === UserRole.USER ? user.linkLimit : "ไม่จำกัด"}
+                    </TableCell>
+                    <TableCell>
+                      <Select value={user.role} onValueChange={(newRole: UserRole) => updateUserRole(user.id, newRole)}>
+                        <SelectTrigger className="w-[130px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={UserRole.USER}>ผู้ใช้</SelectItem>
+                          <SelectItem value={UserRole.SPECIAL_USER}>ผู้ใช้พิเศษ</SelectItem>
+                          <SelectItem value={UserRole.ADMIN}>ผู้ดูแลระบบ</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          
+          {currentUsers.length === 0 && (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">ไม่พบผู้ใช้ที่ตรงกับเงื่อนไขของคุณ</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>{user._count.links} ลิงก์ที่สร้างแล้ว</span>
-                  <span>เข้าร่วมเมื่อ {new Date(user.createdAt).toLocaleDateString()}</span>
-                  <span>ขีดจำกัด: {user.role === UserRole.USER ? user.linkLimit : "ไม่จำกัด"}</span>
-                </div>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-sm text-muted-foreground">
+                แสดง {startIndex + 1}-{Math.min(endIndex, totalUsers)} จาก {totalUsers} ผู้ใช้
               </div>
-
+              
               <div className="flex items-center gap-2">
-                <Select value={user.role} onValueChange={(newRole: UserRole) => updateUserRole(user.id, newRole)}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={UserRole.USER}>ผู้ใช้</SelectItem>
-                    <SelectItem value={UserRole.SPECIAL_USER}>ผู้ใช้พิเศษ</SelectItem>
-                    <SelectItem value={UserRole.ADMIN}>ผู้ดูแลระบบ</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline">ก่อนหน้า</span>
+                </Button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+                    
+                    return (
+                      <Button
+                        key={pageNumber}
+                        variant={currentPage === pageNumber ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className="w-10 h-10"
+                      >
+                        {pageNumber}
+                      </Button>
+                    );
+                  })}
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <span className="hidden sm:inline">ถัดไป</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
-
-      {filteredUsers.length === 0 && (
-        <Card>
-          <CardContent className="p-6 text-center">
-            <p className="text-muted-foreground">ไม่พบผู้ใช้ที่ตรงกับเงื่อนไขของคุณ</p>
           </CardContent>
         </Card>
       )}

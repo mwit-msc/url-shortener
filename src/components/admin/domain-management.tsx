@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus, Settings } from "lucide-react"
+import { Plus, Settings, Mail } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
@@ -53,6 +53,7 @@ export function DomainManagement() {
   const [isAddingDomain, setIsAddingDomain] = useState(false)
   const [editingDomain, setEditingDomain] = useState<Domain | null>(null)
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
+  const [bulkEmailInput, setBulkEmailInput] = useState("")
   const { toast } = useToast()
 
   useEffect(() => {
@@ -182,6 +183,7 @@ export function DomainManagement() {
         fetchDomains()
         setEditingDomain(null)
         setSelectedUsers([])
+        setBulkEmailInput("")
       } else {
         const data = await response.json()
         toast({
@@ -330,15 +332,15 @@ export function DomainManagement() {
       {/* Edit Domain Dialog */}
       {editingDomain && (
         <Dialog open={!!editingDomain} onOpenChange={() => setEditingDomain(null)}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[600px]">
             <DialogHeader>
               <DialogTitle>ตั้งค่าโดเมน: {editingDomain.domain}</DialogTitle>
               <DialogDescription>จัดการการจำกัดการใช้งานโดเมน</DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-4">
-              <div>
-                <Label>การจำกัดการใช้งาน</Label>
+            <div className="grid gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="restriction">การจำกัดการใช้งาน</Label>
                 <Select 
                   value={editingDomain.restriction} 
                   onValueChange={(value) => 
@@ -357,35 +359,102 @@ export function DomainManagement() {
               </div>
 
               {editingDomain.restriction === "SPECIFIC_USERS" && (
-                <div>
-                  <Label>ผู้ใช้ที่ได้รับอนุญาต</Label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto border rounded p-2">
-                    {users.map((user) => (
-                      <div key={user.id} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.includes(user.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedUsers([...selectedUsers, user.id])
-                            } else {
-                              setSelectedUsers(selectedUsers.filter(id => id !== user.id))
-                            }
-                          }}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="bulk-emails">เพิ่มอีเมลหลายๆ อัน</Label>
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="bulk-emails"
+                          placeholder="email1@domain.com, email2@domain.com, email3@domain.com"
+                          value={bulkEmailInput}
+                          onChange={(e) => setBulkEmailInput(e.target.value)}
+                          className="pl-9"
                         />
-                        <span className="text-sm">
-                          {user.name || user.email}
-                          {user.name && <span className="text-muted-foreground"> ({user.email})</span>}
-                        </span>
                       </div>
-                    ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          const emails = bulkEmailInput.split(',').map(email => email.trim()).filter(email => email)
+                          const matchingUsers = users.filter(user => emails.includes(user.email))
+                          const newSelectedIds = matchingUsers.map(user => user.id)
+                          const uniqueIds = [...new Set([...selectedUsers, ...newSelectedIds])]
+                          setSelectedUsers(uniqueIds)
+                          setBulkEmailInput('')
+                          toast({
+                            title: "อัปเดตสำเร็จ",
+                            description: `เพิ่ม ${matchingUsers.length} ผู้ใช้จากอีเมลที่กรอก`,
+                          })
+                        }}
+                        disabled={!bulkEmailInput.trim()}
+                      >
+                        เพิ่มจากอีเมล
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      คั่นอีเมลด้วยเครื่องหมายจุลภาค (,) สามารถเพิ่มได้เฉพาะผู้ใช้ที่มีอยู่ในระบบเท่านั้น
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>ผู้ใช้ที่ได้รับอนุญาต ({selectedUsers.length})</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setSelectedUsers([])}
+                        disabled={selectedUsers.length === 0}
+                      >
+                        ล้างทั้งหมด
+                      </Button>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto border rounded-md">
+                      <div className="p-3 space-y-3">
+                        {users.map((user) => (
+                          <div key={user.id} className="flex items-start space-x-3">
+                            <input
+                              type="checkbox"
+                              id={`user-${user.id}`}
+                              className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-2 focus:ring-primary"
+                              checked={selectedUsers.includes(user.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedUsers([...selectedUsers, user.id])
+                                } else {
+                                  setSelectedUsers(selectedUsers.filter(id => id !== user.id))
+                                }
+                              }}
+                            />
+                            <label htmlFor={`user-${user.id}`} className="flex-1 cursor-pointer">
+                              <div className="text-sm font-medium">{user.name || user.email}</div>
+                              {user.name && (
+                                <div className="text-xs text-muted-foreground">{user.email}</div>
+                              )}
+                            </label>
+                          </div>
+                        ))}
+                        {users.length === 0 && (
+                          <p className="text-sm text-muted-foreground text-center py-4">
+                            ไม่พบผู้ใช้ในระบบ
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setEditingDomain(null)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
+              <Button variant="outline" onClick={() => {
+                setEditingDomain(null)
+                setSelectedUsers([])
+                setBulkEmailInput('')
+              }}>
                 ยกเลิก
               </Button>
               <Button 
@@ -394,8 +463,9 @@ export function DomainManagement() {
                   editingDomain.restriction,
                   editingDomain.restriction === "SPECIFIC_USERS" ? selectedUsers : undefined
                 )}
+                className="w-full sm:w-auto"
               >
-                บันทึก
+                บันทึกการเปลี่ยนแปลง
               </Button>
             </DialogFooter>
           </DialogContent>

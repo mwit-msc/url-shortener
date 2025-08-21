@@ -127,7 +127,7 @@ export function DashboardStats({ userRole, linkLimit }: DashboardStatsProps) {
           <CardTitle className="text-lg sm:text-xl">ข้อมูลบัญชี</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-4 text">
             <div className="flex justify-between items-center py-2">
               <span className="text-sm sm:text-base text-muted-foreground">บทบาท</span>
               <span className="text-sm sm:text-base font-medium">
@@ -154,7 +154,7 @@ export function DashboardStats({ userRole, linkLimit }: DashboardStatsProps) {
 
       {/* Quick Actions */}
       <Card className="shadow-sm">
-        <CardHeader className="pb-3">
+        <CardHeader>
           <CardTitle className="text-lg sm:text-xl">การดำเนินการด่วน</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
