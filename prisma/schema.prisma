@@ -53,6 +53,7 @@ model User {
   links         Link[]
   customRequests CustomLinkRequest[]
   allowedDomains DomainAllowedUser[]
+  adminLogs     AdminLog[]
 
   @@map("users")
 }
@@ -137,18 +138,49 @@ model CustomLinkRequest {
 }
 
 model LinkAnalytics {
-  id        String   @id @default(cuid())
-  linkId    String
-  ipAddress String?  // Not used for privacy reasons
-  userAgent String?
-  referer   String?
-  country   String?
-  city      String?
-  clickedAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  linkId      String
+  ipAddress   String?  // Not used for privacy reasons
+  userAgent   String?
+  referer     String?
+  country     String?
+  city        String?
+  device      String?  // Mobile, Desktop, Tablet
+  browser     String?  // Chrome, Firefox, Safari, etc.
+  os          String?  // Windows, macOS, Linux, iOS, Android
+  language    String?  // Browser language
+  utm_source  String?  // UTM tracking parameters
+  utm_medium  String?
+  utm_campaign String?
+  utm_term    String?
+  utm_content String?
+  clickedAt   DateTime @default(now())
 
   link Link @relation(fields: [linkId], references: [id], onDelete: Cascade)
 
+  @@index([linkId])
+  @@index([clickedAt])
   @@map("link_analytics")
+}
+
+model AdminLog {
+  id          String      @id @default(cuid())
+  adminId     String      // Admin who performed the action
+  action      AdminAction
+  entityType  String      // 'user', 'link', 'domain', 'custom_request', 'abuse_report'
+  entityId    String?     // ID of the affected entity
+  details     Json?       // Additional details about the action
+  ipAddress   String?     // Admin's IP address
+  userAgent   String?     // Admin's user agent
+  createdAt   DateTime    @default(now())
+
+  admin User @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  @@index([adminId])
+  @@index([action])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("admin_logs")
 }
 
 enum UserRole {
@@ -204,4 +236,22 @@ enum AbuseReportStatus {
   INVESTIGATING // Report is being investigated
   RESOLVED     // Report resolved, action taken
   DISMISSED    // Report dismissed as invalid
+}
+
+enum AdminAction {
+  USER_ROLE_CHANGED     // Admin changed user's role
+  USER_LIMIT_CHANGED    // Admin changed user's link limit
+  USER_BANNED           // Admin banned a user
+  USER_UNBANNED         // Admin unbanned a user
+  LINK_DELETED          // Admin deleted a link
+  LINK_DEACTIVATED      // Admin deactivated a link
+  LINK_REACTIVATED      // Admin reactivated a link
+  CUSTOM_REQUEST_APPROVED // Admin approved custom link request
+  CUSTOM_REQUEST_REJECTED // Admin rejected custom link request
+  DOMAIN_CREATED        // Admin created new domain
+  DOMAIN_UPDATED        // Admin updated domain settings
+  DOMAIN_DELETED        // Admin deleted domain
+  ABUSE_REPORT_REVIEWED // Admin reviewed abuse report
+  SYSTEM_SETTINGS_CHANGED // Admin changed system settings
+  BULK_ACTION_PERFORMED // Admin performed bulk action
 }

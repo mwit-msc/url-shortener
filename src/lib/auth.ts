@@ -5,12 +5,24 @@ import { UserRole } from "@prisma/client"
 import { AuthOptions } from "next-auth"
 import { Adapter } from "next-auth/adapters"
 
+if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+  throw new Error("Google OAuth credentials are not configured")
+}
+
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error("NEXTAUTH_SECRET is not configured")
+}
+
+if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === "production") {
+  throw new Error("NEXTAUTH_URL is required in production")
+}
+
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       authorization: {
         params: {
           prompt: "consent",
@@ -21,44 +33,76 @@ export const authOptions: AuthOptions = {
       },
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
     async session({ session, user }) {
       if (session?.user) {
-        // Get user with role from database
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { id: true, role: true, linkLimit: true },
-        })
+        try {
+          // Get user with role from database
+          const dbUser = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { id: true, role: true, linkLimit: true },
+          })
 
-        session.user.id = user.id
-        session.user.role = dbUser?.role || UserRole.USER
-        session.user.linkLimit = dbUser?.linkLimit || 10
+          session.user.id = user.id
+          session.user.role = dbUser?.role || UserRole.USER
+          session.user.linkLimit = dbUser?.linkLimit || 10
+        } catch (error) {
+          console.error("Error fetching user data in session callback:", error)
+          // Return session with defaults if database query fails
+          session.user.id = user.id
+          session.user.role = UserRole.USER
+          session.user.linkLimit = 10
+        }
       }
       return session
     },
     async signIn({ account, profile }) {
-      if (account?.provider === "google" && profile?.email) {
-        const emailDomain = profile.email.split("@")[1];
-        if (emailDomain !== "mwit.ac.th") return "/auth/error?error=OAuthSignin";
-        return true;
+      try {
+        if (account?.provider === "google" && profile?.email) {
+          const emailDomain = profile.email.split("@")[1];
+          if (emailDomain !== "mwit.ac.th") {
+            console.warn(`Sign-in attempt from non-MWIT email: ${profile.email}`)
+            return "/auth/error?error=OAuthSignin";
+          }
+          return true;
+        }
+        return false;
+      } catch (error) {
+        console.error("Error in signIn callback:", error)
+        return "/auth/error?error=Configuration"
       }
-      return false;
     },
   },
   events: {
     async createUser({ user }) {
       if (user.email) {
-        const role = UserRole.USER
-        const linkLimit = role === UserRole.USER ? 10 : -1
+        try {
+          const role = UserRole.USER
+          const linkLimit = role === UserRole.USER ? 10 : -1
 
-        await prisma.user.update({
-          where: { id: user.id },
-          data: {
-            role,
-            linkLimit,
-          },
-        })
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              role,
+              linkLimit,
+            },
+          })
+
+          console.log(`New user created: ${user.email} with role ${role}`)
+        } catch (error) {
+          console.error("Error updating user on creation:", error)
+          // Don't throw - let the user be created even if role update fails
+        }
       }
+    },
+    async signIn({ user, isNewUser }) {
+      if (isNewUser) {
+        console.log(`First-time login for user: ${user.email}`)
+      }
+    },
+    async signOut({ session, token }) {
+      console.log(`User signed out: ${session?.user?.email || token?.email || 'Unknown'}`)
     },
   },
   pages: {

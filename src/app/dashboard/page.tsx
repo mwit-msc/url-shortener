@@ -3,7 +3,9 @@ import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { CreateLinkForm } from "@/components/dashboard/create-link-form"
 import { LinksList } from "@/components/dashboard/links-list"
 import { DashboardStats } from "@/components/dashboard/dashboard-stats"
+import { AnalyticsDashboard } from "@/components/dashboard/analytics-dashboard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { UserRole } from "@prisma/client"
 
 export default async function DashboardPage() {
   const user = await requireAuth()
@@ -33,13 +35,22 @@ export default async function DashboardPage() {
           {/* Main Content Area */}
           <div className="xl:col-span-3 xl:order-1">
             <Tabs defaultValue="create" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 h-12 text-base">
-                <TabsTrigger value="create" className="text-sm sm:text-base">
+              <TabsList className={`grid sm:block sm:justify-between w-full h-12 p-1 ${
+                user.role === UserRole.SPECIAL_USER || user.role === UserRole.ADMIN
+                  ? 'grid-cols-1 sm:grid-cols-3'
+                  : 'grid-cols-1 sm:grid-cols-2'
+              }`}>
+                <TabsTrigger value="create" className="text-sm md:text-base whitespace-nowrap h-10 flex-shrink-0">
                   สร้างลิงก์ใหม่
                 </TabsTrigger>
-                <TabsTrigger value="links" className="text-sm sm:text-base">
+                <TabsTrigger value="links" className="text-sm md:text-base whitespace-nowrap h-10 flex-shrink-0">
                   ลิงก์ของฉัน
                 </TabsTrigger>
+                {(user.role === UserRole.SPECIAL_USER || user.role === UserRole.ADMIN) && (
+                  <TabsTrigger value="analytics" className="text-sm md:text-base whitespace-nowrap h-10 flex-shrink-0">
+                    Analytics
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="create" className="space-y-0">
@@ -49,6 +60,12 @@ export default async function DashboardPage() {
               <TabsContent value="links" className="space-y-0">
                 <LinksList userId={user.id} userRole={user.role} />
               </TabsContent>
+
+              {(user.role === UserRole.SPECIAL_USER || user.role === UserRole.ADMIN) && (
+                <TabsContent value="analytics" className="space-y-0">
+                  <AnalyticsDashboard userRole={user.role} />
+                </TabsContent>
+              )}
             </Tabs>
           </div>
         </div>

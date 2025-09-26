@@ -1,6 +1,7 @@
 import { prisma } from "./prisma"
 import { generateUniqueShortCode, isShortCodeAvailable, isValidUrl, isValidShortCode } from "./shortcode"
 import { UserRole, DomainRestriction } from "@prisma/client"
+import { processAnalyticsData } from "./analytics"
 
 export interface CreateLinkParams {
   originalUrl: string
@@ -185,12 +186,13 @@ export async function getLinkByShortCode(shortCode: string, domain: string) {
 
 export async function incrementClickCount(
   linkId: string,
-  analyticsData?: {
+  rawAnalyticsData?: {
     ipAddress?: string
     userAgent?: string
     referer?: string
     country?: string
     city?: string
+    language?: string
   },
 ) {
   // Increment click count
@@ -199,12 +201,31 @@ export async function incrementClickCount(
     data: { clicks: { increment: 1 } },
   })
 
-  // Record analytics if data provided
-  if (analyticsData) {
+  // Record enhanced analytics if data provided
+  if (rawAnalyticsData) {
+    const enhancedData = processAnalyticsData(
+      rawAnalyticsData.userAgent,
+      rawAnalyticsData.referer,
+      rawAnalyticsData.language
+    )
+
     await prisma.linkAnalytics.create({
       data: {
         linkId,
-        ...analyticsData,
+        ipAddress: rawAnalyticsData.ipAddress,
+        userAgent: rawAnalyticsData.userAgent,
+        referer: rawAnalyticsData.referer,
+        country: rawAnalyticsData.country,
+        city: rawAnalyticsData.city,
+        language: rawAnalyticsData.language,
+        device: enhancedData.device,
+        browser: enhancedData.browser,
+        os: enhancedData.os,
+        utm_source: enhancedData.utm_source,
+        utm_medium: enhancedData.utm_medium,
+        utm_campaign: enhancedData.utm_campaign,
+        utm_term: enhancedData.utm_term,
+        utm_content: enhancedData.utm_content,
       },
     })
   }

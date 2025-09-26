@@ -6,6 +6,7 @@ import { UserManagement } from "@/components/admin/user-management"
 import { DomainManagement } from "@/components/admin/domain-management"
 import { LinkModeration } from "@/components/admin/link-moderation"
 import { AbuseReportsPanel } from "@/components/admin/abuse-reports-panel"
+import { AdminLogsPanel } from "@/components/admin/admin-logs-panel"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default async function AdminPage() {
@@ -26,40 +27,47 @@ export default async function AdminPage() {
         </div>
 
         <Tabs defaultValue="requests" className="space-y-6">
-          <div className="overflow-x-auto">
-            <TabsList className="grid w-full min-w-max grid-cols-5 gap-x-1 md:gap-x-2">
-              <TabsTrigger 
-                value="requests" 
-                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+          <div className="overflow-x-auto pb-2">
+            <TabsList className="inline-flex w-auto min-w-full h-auto p-1 gap-1 justify-start">
+              <TabsTrigger
+                value="requests"
+                className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <span className="sm:hidden">คำขอ</span>
                 <span className="hidden sm:inline">คำขอที่กำหนดเอง</span>
+                <span className="sm:hidden">คำขอ</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="abuse" 
-                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              <TabsTrigger
+                value="abuse"
+                className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <span className="sm:hidden">รายงาน</span>
                 <span className="hidden sm:inline">รายงานการละเมิด</span>
+                <span className="sm:hidden">รายงาน</span>
               </TabsTrigger>
-              <TabsTrigger 
-                value="users" 
-                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              <TabsTrigger
+                value="users"
+                className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 ผู้ใช้
               </TabsTrigger>
-              <TabsTrigger 
-                value="domains" 
-                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              <TabsTrigger
+                value="domains"
+                className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
                 โดเมน
               </TabsTrigger>
-              <TabsTrigger 
-                value="links" 
-                className="text-xs sm:text-sm px-2 sm:px-3 whitespace-nowrap"
+              <TabsTrigger
+                value="links"
+                className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
               >
-                <span className="sm:hidden">กลั่นกรอง</span>
                 <span className="hidden sm:inline">การกลั่นกรองลิงก์</span>
+                <span className="sm:hidden">ลิงก์</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="logs"
+                className="flex-shrink-0 px-3 py-2 text-sm whitespace-nowrap data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+              >
+                <span className="hidden sm:inline">บันทึกการดำเนินการ</span>
+                <span className="sm:hidden">บันทึก</span>
               </TabsTrigger>
             </TabsList>
           </div>
@@ -82,6 +90,10 @@ export default async function AdminPage() {
 
           <TabsContent value="links">
             <LinkModeration />
+          </TabsContent>
+
+          <TabsContent value="logs">
+            <AdminLogsPanel />
           </TabsContent>
         </Tabs>
       </div>

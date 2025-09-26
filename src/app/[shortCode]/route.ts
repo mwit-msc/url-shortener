@@ -17,7 +17,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     const userAgent = headersList.get("user-agent") || ""
     const referer = headersList.get("referer") || ""
+    const acceptLanguage = headersList.get("accept-language") || ""
 
+    // Extract primary language from Accept-Language header
+    const language = acceptLanguage.split(',')[0]?.split(';')[0]?.trim() || undefined
 
     const link = await getLinkByShortCode(shortCode, domain)
 
@@ -175,9 +178,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Record analytics and increment click count
     await incrementClickCount(link.id, {
-      ipAddress: undefined,
+      ipAddress: undefined, // Not collected for privacy
       userAgent,
       referer,
+      language,
       // You can add geolocation data here if needed
     })
 
