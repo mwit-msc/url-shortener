@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth-utils"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "../../../../../../prisma.config"
 import { DomainRestriction } from "@prisma/client"
 
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {

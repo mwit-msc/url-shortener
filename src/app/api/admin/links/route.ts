@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth-utils"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "../../../../../prisma.config"
 import { validateHost, createHostValidationResponse } from "@/lib/host-validation"
 
 export async function GET(request: NextRequest) {

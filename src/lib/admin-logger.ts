@@ -1,4 +1,4 @@
-import { prisma } from "./prisma"
+import { prisma } from "../../prisma.config"
 import { AdminAction } from "@prisma/client"
 import { headers } from "next/headers"
 
@@ -20,7 +20,7 @@ export async function logAdminAction(params: LogAdminActionParams) {
         action: params.action,
         entityType: params.entityType,
         entityId: params.entityId,
-        details: params.details ? JSON.stringify(params.details) : null,
+        details: params.details ? JSON.stringify(params.details) : undefined,
         ipAddress: params.ipAddress,
         userAgent: params.userAgent,
       },

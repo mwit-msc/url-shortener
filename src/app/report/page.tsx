@@ -1,3 +1,7 @@
+"use client"
+
+import { Suspense } from "react"
+import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ReportAbuseDialog } from "@/components/public/report-abuse-dialog"
 import { ReportAbuseForm } from "@/components/public/report-abuse-form"
@@ -6,23 +10,18 @@ import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Shield, AlertTriangle, Home, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
-interface ReportPageProps {
-  searchParams: Promise<{
-    url?: string
-    domain?: string
-    code?: string
-  }>
-}
-
-export default async function ReportPage({ searchParams }: ReportPageProps) {
-  const { url, domain, code } = await searchParams
+function ReportContent() {
+  const searchParams = useSearchParams()
+  const url = searchParams.get("url") || undefined
+  const domain = searchParams.get("domain") || undefined
+  const code = searchParams.get("code") || undefined
 
   return (
     <div className="min-h-screen bg-background">
       <div className="absolute top-4 right-4">
         <ThemeToggle />
       </div>
-      
+
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
           <Button asChild variant="outline" className="mb-4">
@@ -31,7 +30,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
               กลับหน้าหลัก
             </Link>
           </Button>
-          
+
           <Card>
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
@@ -55,7 +54,7 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                       <p className="text-muted-foreground leading-relaxed mb-4">
                         You are reporting a specific link identified in the URL parameters.
                       </p>
-                      
+
                       <div className="bg-muted p-6 rounded-lg space-y-3 not-prose">
                         <h3 className="font-semibold text-lg">Link to Report:</h3>
                         <p className="font-mono text-base break-all bg-background p-3 rounded border">
@@ -67,10 +66,10 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                           </p>
                         )}
                       </div>
-                      
+
                       <div className="flex justify-center mt-6 not-prose">
-                        <ReportAbuseDialog 
-                          shortCode={code} 
+                        <ReportAbuseDialog
+                          shortCode={code}
                           domain={domain}
                           trigger={
                             <Button size="lg" className="text-lg px-8 py-4 h-auto">
@@ -81,11 +80,11 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
                         />
                       </div>
                     </section>
-                    
+
                     <section>
                       <h2 className="text-2xl font-semibold mb-4">Alternative: Full Report Form</h2>
                       <div className="not-prose">
-                        <ReportAbuseForm 
+                        <ReportAbuseForm
                           prefilledUrl={url}
                           prefilledDomain={domain}
                           prefilledCode={code}
@@ -130,5 +129,20 @@ export default async function ReportPage({ searchParams }: ReportPageProps) {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ReportPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <ReportContent />
+    </Suspense>
   )
 }

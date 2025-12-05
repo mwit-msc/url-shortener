@@ -135,7 +135,7 @@ export function AdminLogsPanel() {
   }, [currentPage, selectedAction, selectedEntityType, dateFrom, dateTo])
 
   const getActionBadgeColor = (action: AdminAction) => {
-    const criticalActions = [
+    const criticalActions: AdminAction[] = [
       AdminAction.USER_BANNED,
       AdminAction.LINK_DELETED,
       AdminAction.DOMAIN_DELETED,

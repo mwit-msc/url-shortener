@@ -1,4 +1,4 @@
-import { prisma } from "./prisma"
+import { prisma } from "../../prisma.config"
 import { UserRole } from "@prisma/client"
 import type { LinkAnalyticsSummary, UserAnalyticsOverview, AdminAnalyticsOverview } from "./analytics"
 
@@ -359,7 +359,7 @@ export async function getAdminAnalyticsOverview(
   const clickTrendsMap = new Map<string, number>()
   clickTrendsData.forEach(item => {
     const date = item.clickedAt.toISOString().split('T')[0]
-    clickTrendsMap.set(date, (clickTrendsMap.get(date) || 0) + item._count.linkId)
+    clickTrendsMap.set(date, (clickTrendsMap.get(date) || 0) + item._count.id)
   })
 
   return {

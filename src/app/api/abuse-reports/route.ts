@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth-utils"
-import { prisma } from "@/lib/prisma"
+import { prisma } from "../../../../prisma.config"
 import { UserRole, AbuseReportStatus, AbuseReportType } from "@prisma/client"
 
 

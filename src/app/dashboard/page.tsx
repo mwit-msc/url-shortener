@@ -1,4 +1,8 @@
-import { requireAuth } from "@/lib/auth-utils"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { CreateLinkForm } from "@/components/dashboard/create-link-form"
 import { LinksList } from "@/components/dashboard/links-list"
@@ -7,8 +11,34 @@ import { AnalyticsDashboard } from "@/components/dashboard/analytics-dashboard"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { UserRole } from "@prisma/client"
 
-export default async function DashboardPage() {
-  const user = await requireAuth()
+export default function DashboardPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [isAuthorized, setIsAuthorized] = useState(false)
+
+  useEffect(() => {
+    if (status === "loading") return
+
+    if (!session) {
+      router.push("/auth/signin")
+      return
+    }
+
+    setIsAuthorized(true)
+  }, [session, status, router])
+
+  if (status === "loading" || !isAuthorized || !session) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  const user = session.user
 
   return (
     <div className="min-h-screen bg-background">

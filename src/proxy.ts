@@ -10,7 +10,7 @@ function getAllowedHost(): string {
   }
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   const host = request.headers.get('X-Forwarded-Host') || request.nextUrl.host

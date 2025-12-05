@@ -1,28 +1,33 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import GoogleProvider from "next-auth/providers/google"
-import { prisma } from "./prisma"
+import { prisma } from "../../prisma.config"
 import { UserRole } from "@prisma/client"
 import { AuthOptions } from "next-auth"
 import { Adapter } from "next-auth/adapters"
 
-if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-  throw new Error("Google OAuth credentials are not configured")
-}
+// Only validate environment variables when not in build mode
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || process.env.NEXT_PHASE === 'phase-development-build'
 
-if (!process.env.NEXTAUTH_SECRET) {
-  throw new Error("NEXTAUTH_SECRET is not configured")
-}
+if (!isBuildTime) {
+  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
+    throw new Error("Google OAuth credentials are not configured")
+  }
 
-if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === "production") {
-  throw new Error("NEXTAUTH_URL is required in production")
+  if (!process.env.NEXTAUTH_SECRET) {
+    throw new Error("NEXTAUTH_SECRET is not configured")
+  }
+
+  if (!process.env.NEXTAUTH_URL && process.env.NODE_ENV === "production") {
+    throw new Error("NEXTAUTH_URL is required in production")
+  }
 }
 
 export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma) as Adapter,
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID || 'dummy-client-id',
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'dummy-client-secret',
       authorization: {
         params: {
           prompt: "consent",
@@ -33,7 +38,7 @@ export const authOptions: AuthOptions = {
       },
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET,
+  secret: process.env.NEXTAUTH_SECRET || 'dummy-secret',
   callbacks: {
     async session({ session, user }) {
       if (session?.user) {

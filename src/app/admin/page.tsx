@@ -1,4 +1,7 @@
-import { requireAdmin } from "@/lib/auth-utils"
+"use client"
+
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { AdminHeader } from "@/components/admin/admin-header"
 import { AdminStats } from "@/components/admin/admin-stats"
 import { CustomRequestsPanel } from "@/components/admin/custom-requests-panel"
@@ -8,13 +11,44 @@ import { LinkModeration } from "@/components/admin/link-moderation"
 import { AbuseReportsPanel } from "@/components/admin/abuse-reports-panel"
 import { AdminLogsPanel } from "@/components/admin/admin-logs-panel"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useSession } from "next-auth/react"
+import { UserRole } from "@prisma/client"
 
-export default async function AdminPage() {
-  const user = await requireAdmin()
+export default function AdminPage() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+  const [isAuthorized, setIsAuthorized] = useState(false)
+
+  useEffect(() => {
+    if (status === "loading") return
+
+    if (!session) {
+      router.push("/auth/signin")
+      return
+    }
+
+    if (session.user?.role !== UserRole.ADMIN) {
+      router.push("/unauthorized")
+      return
+    }
+
+    setIsAuthorized(true)
+  }, [session, status, router])
+
+  if (status === "loading" || !isAuthorized || !session) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
-      <AdminHeader user={user} />
+      <AdminHeader user={session.user} />
 
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
