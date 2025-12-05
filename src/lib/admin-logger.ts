@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma.config"
+import { prisma } from "@/lib/prisma"
 import { AdminAction } from "@prisma/client"
 import { headers } from "next/headers"
 

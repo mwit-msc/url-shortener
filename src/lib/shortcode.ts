@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma.config"
+import { prisma } from "@/lib/prisma"
 
 // Generate a random shortcode
 export function generateShortCode(length = 6): string {

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/lib/auth-utils"
-import { prisma } from "../../../../../../prisma.config"
+import { prisma } from "@/lib/prisma"
 import { createLink } from "@/lib/link-service"
 import { UserRole } from "@prisma/client"
 

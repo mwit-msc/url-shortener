@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma.config"
+import { prisma } from "@/lib/prisma"
 import { generateUniqueShortCode, isShortCodeAvailable, isValidUrl, isValidShortCode } from "./shortcode"
 import { UserRole, DomainRestriction } from "@prisma/client"
 import { processAnalyticsData } from "./analytics"

@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma.config"
+import { prisma } from "@/lib/prisma"
 import { UserRole } from "@prisma/client"
 import type { LinkAnalyticsSummary, UserAnalyticsOverview, AdminAnalyticsOverview } from "./analytics"
 
