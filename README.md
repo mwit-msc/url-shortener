@@ -1,4 +1,4 @@
-# MWIT URL Shortener
+# URL Shortener
 
 [![Docker](https://img.shields.io/badge/Deployed%20with-Docker-2496ED?logo=docker)](https://www.docker.com)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org)
@@ -6,7 +6,7 @@
 [![Prisma](https://img.shields.io/badge/Prisma-7-2D3748?logo=prisma)](https://www.prisma.io)
 [![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20NC-purple.svg)](./LICENSE)
 
-A modern URL shortener with analytics, admin panel, and abuse reporting for MWIT.
+A modern URL shortener with analytics, admin panel, and abuse reporting.
 
 ## Features
 
