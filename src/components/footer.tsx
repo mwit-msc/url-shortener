@@ -25,9 +25,9 @@ export default function Footer() {
           <div className="lg:col-span-1 space-y-4">
             <div className="flex items-center space-x-4">
               <Image
-                src="/sc-logo.png"
-                alt="MWIT-SC Logo"
-                width={56}
+                src="/logo.webp"
+                alt="MWIT TINY Logo"
+                width={120}
                 height={56}
                 className="rounded-lg"
               />
