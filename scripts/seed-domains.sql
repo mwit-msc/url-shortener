@@ -1,7 +1,12 @@
--- Seed script to add default shortlink domains
--- This will be executed after the database is set up
+-- Seed script to add the shortlink domains served by this app.
+-- Run after migrations: psql "$DATABASE_URL" -f scripts/seed-domains.sql
+-- Redirects resolve by matching the request Host header against domains.domain,
+-- so every domain that points DNS at this app MUST have a row here.
 
-INSERT INTO domains (id, domain, "isActive", "createdAt", "updatedAt") VALUES
-  ('cluid1', 'tiny.mwit.link', true, NOW(), NOW()),
-  ('cluid2', 's.mwit.link', true, NOW(), NOW())
-ON CONFLICT (domain) DO NOTHING;
+INSERT INTO domains (id, domain, "isActive", restriction, "createdAt", "updatedAt") VALUES
+  ('dom_tiny',  'tiny.mwit.link',  true, 'EVERYONE', NOW(), NOW()),
+  ('dom_s',     's.mwit.link',     true, 'EVERYONE', NOW(), NOW()),
+  ('dom_links', 'links.mwit.link', true, 'EVERYONE', NOW(), NOW())
+ON CONFLICT (domain) DO UPDATE
+  SET "isActive" = EXCLUDED."isActive",
+      "updatedAt" = NOW();

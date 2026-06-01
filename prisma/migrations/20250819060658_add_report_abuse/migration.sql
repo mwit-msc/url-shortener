@@ -1,18 +1,18 @@
 -- CreateEnum
-CREATE TYPE "mwit-link_tiny"."AbuseReportType" AS ENUM ('SPAM', 'MALWARE', 'ILLEGAL', 'COPYRIGHT', 'HARASSMENT', 'ADULT_CONTENT', 'SCAM', 'OTHER');
+CREATE TYPE "AbuseReportType" AS ENUM ('SPAM', 'MALWARE', 'ILLEGAL', 'COPYRIGHT', 'HARASSMENT', 'ADULT_CONTENT', 'SCAM', 'OTHER');
 
 -- CreateEnum
-CREATE TYPE "mwit-link_tiny"."AbuseReportStatus" AS ENUM ('PENDING', 'INVESTIGATING', 'RESOLVED', 'DISMISSED');
+CREATE TYPE "AbuseReportStatus" AS ENUM ('PENDING', 'INVESTIGATING', 'RESOLVED', 'DISMISSED');
 
 -- CreateTable
-CREATE TABLE "mwit-link_tiny"."abuse_reports" (
+CREATE TABLE "abuse_reports" (
     "id" TEXT NOT NULL,
     "linkId" TEXT NOT NULL,
     "reporterIp" TEXT,
     "reporterEmail" TEXT,
-    "reportType" "mwit-link_tiny"."AbuseReportType" NOT NULL,
+    "reportType" "AbuseReportType" NOT NULL,
     "description" TEXT,
-    "status" "mwit-link_tiny"."AbuseReportStatus" NOT NULL DEFAULT 'PENDING',
+    "status" "AbuseReportStatus" NOT NULL DEFAULT 'PENDING',
     "reviewedBy" TEXT,
     "reviewedAt" TIMESTAMP(3),
     "adminNote" TEXT,
@@ -23,4 +23,4 @@ CREATE TABLE "mwit-link_tiny"."abuse_reports" (
 );
 
 -- AddForeignKey
-ALTER TABLE "mwit-link_tiny"."abuse_reports" ADD CONSTRAINT "abuse_reports_linkId_fkey" FOREIGN KEY ("linkId") REFERENCES "mwit-link_tiny"."links"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "abuse_reports" ADD CONSTRAINT "abuse_reports_linkId_fkey" FOREIGN KEY ("linkId") REFERENCES "links"("id") ON DELETE CASCADE ON UPDATE CASCADE;
