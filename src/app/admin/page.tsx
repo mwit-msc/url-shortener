@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { AdminHeader } from "@/components/admin/admin-header"
 import { AdminStats } from "@/components/admin/admin-stats"
@@ -17,7 +17,8 @@ import { UserRole } from "@prisma/client"
 export default function AdminPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [isAuthorized, setIsAuthorized] = useState(false)
+  const isAuthorized =
+    status === "authenticated" && session?.user?.role === UserRole.ADMIN
 
   useEffect(() => {
     if (status === "loading") return
@@ -29,10 +30,7 @@ export default function AdminPage() {
 
     if (session.user?.role !== UserRole.ADMIN) {
       router.push("/unauthorized")
-      return
     }
-
-    setIsAuthorized(true)
   }, [session, status, router])
 
   if (status === "loading" || !isAuthorized || !session) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useSession } from "next-auth/react"
 import { DashboardHeader } from "@/components/dashboard/dashboard-header"
@@ -14,17 +14,14 @@ import { UserRole } from "@prisma/client"
 export default function DashboardPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
-  const [isAuthorized, setIsAuthorized] = useState(false)
+  const isAuthorized = status === "authenticated" && !!session
 
   useEffect(() => {
     if (status === "loading") return
 
     if (!session) {
       router.push("/auth/signin")
-      return
     }
-
-    setIsAuthorized(true)
   }, [session, status, router])
 
   if (status === "loading" || !isAuthorized || !session) {

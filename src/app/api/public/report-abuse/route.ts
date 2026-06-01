@@ -38,7 +38,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Link not found" }, { status: 404 })
     }
 
-    // Note: IP-based rate limiting removed for privacy
+    // Note: IP-based rate limiting removed for privacy.
+    // Instead, dedupe: block a new report when an unresolved one of the same
+    // type already exists for this link — curbs spam without tracking IPs.
+    const existingOpen = await prisma.abuseReport.findFirst({
+      where: {
+        linkId: link.id,
+        reportType,
+        status: { in: ["PENDING", "INVESTIGATING"] },
+      },
+      select: { id: true },
+    })
+
+    if (existingOpen) {
+      return NextResponse.json({
+        message: "A report of this type is already under review for this link. Thank you.",
+        reportId: existingOpen.id,
+      })
+    }
 
     // Create the abuse report
     const abuseReport = await prisma.abuseReport.create({

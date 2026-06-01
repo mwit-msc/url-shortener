@@ -3,6 +3,16 @@ import { generateUniqueShortCode, isShortCodeAvailable, isValidUrl, isValidShort
 import { UserRole, DomainRestriction } from "@prisma/client"
 import { processAnalyticsData } from "./analytics"
 
+// Prisma unique-constraint violation. The shortCode/domain check-then-create
+// is not atomic, so a concurrent insert can still collide on @@unique.
+function isUniqueConstraintError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    (error as { code?: string }).code === "P2002"
+  )
+}
+
 export interface CreateLinkParams {
   originalUrl: string
   title?: string
@@ -75,7 +85,8 @@ export async function createLink(params: CreateLinkParams): Promise<CreateLinkRe
       select: { linkLimit: true },
     })
 
-    if (user && userLinkCount >= user.linkLimit) {
+    // A negative limit (e.g. -1) means unlimited.
+    if (user && user.linkLimit >= 0 && userLinkCount >= user.linkLimit) {
       return { success: false, error: "Link limit exceeded" }
     }
   }
@@ -93,28 +104,36 @@ export async function createLink(params: CreateLinkParams): Promise<CreateLinkRe
 
     // Special users and admins can create custom links directly
     if (userRole === UserRole.SPECIAL_USER || userRole === UserRole.ADMIN) {
-      const link = await prisma.link.create({
-        data: {
-          shortCode: customShortCode,
-          originalUrl,
-          title,
-          description,
-          domainId,
-          userId,
-          isCustom: true,
-          expiresAt,
-        },
-      })
+      try {
+        const link = await prisma.link.create({
+          data: {
+            shortCode: customShortCode,
+            originalUrl,
+            title,
+            description,
+            domainId,
+            userId,
+            isCustom: true,
+            expiresAt,
+          },
+        })
 
-      return {
-        success: true,
-        link: {
-          id: link.id,
-          shortCode: link.shortCode,
-          originalUrl: link.originalUrl,
-          domain: domain.domain,
-          fullUrl: `https://${domain.domain}/${link.shortCode}`,
-        },
+        return {
+          success: true,
+          link: {
+            id: link.id,
+            shortCode: link.shortCode,
+            originalUrl: link.originalUrl,
+            domain: domain.domain,
+            fullUrl: `https://${domain.domain}/${link.shortCode}`,
+          },
+        }
+      } catch (error) {
+        // Lost the race against a concurrent insert of the same shortcode.
+        if (isUniqueConstraintError(error)) {
+          return { success: false, error: "Shortcode already exists" }
+        }
+        throw error
       }
     } else {
       // Regular users need approval for custom shortcodes
@@ -139,32 +158,44 @@ export async function createLink(params: CreateLinkParams): Promise<CreateLinkRe
     }
   }
 
-  // Generate automatic shortcode
-  const shortCode = await generateUniqueShortCode(domainId)
+  // Generate automatic shortcode. Retry on the (rare) race where a concurrent
+  // request grabbed the same generated code between check and insert.
+  const maxCreateAttempts = 5
+  for (let attempt = 0; attempt < maxCreateAttempts; attempt++) {
+    const shortCode = await generateUniqueShortCode(domainId)
+    try {
+      const link = await prisma.link.create({
+        data: {
+          shortCode,
+          originalUrl,
+          title,
+          description,
+          domainId,
+          userId,
+          isCustom: false,
+          expiresAt,
+        },
+      })
 
-  const link = await prisma.link.create({
-    data: {
-      shortCode,
-      originalUrl,
-      title,
-      description,
-      domainId,
-      userId,
-      isCustom: false,
-      expiresAt,
-    },
-  })
-
-  return {
-    success: true,
-    link: {
-      id: link.id,
-      shortCode: link.shortCode,
-      originalUrl: link.originalUrl,
-      domain: domain.domain,
-      fullUrl: `https://${domain.domain}/${link.shortCode}`,
-    },
+      return {
+        success: true,
+        link: {
+          id: link.id,
+          shortCode: link.shortCode,
+          originalUrl: link.originalUrl,
+          domain: domain.domain,
+          fullUrl: `https://${domain.domain}/${link.shortCode}`,
+        },
+      }
+    } catch (error) {
+      if (isUniqueConstraintError(error)) {
+        continue // collision — generate a fresh code and retry
+      }
+      throw error
+    }
   }
+
+  return { success: false, error: "Failed to generate a unique shortcode" }
 }
 
 export async function getLinkByShortCode(shortCode: string, domain: string) {

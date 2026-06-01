@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -80,7 +80,7 @@ export function AdminLogsPanel() {
   const [dateFrom, setDateFrom] = useState<string>("")
   const [dateTo, setDateTo] = useState<string>("")
 
-  const fetchLogs = async () => {
+  const fetchLogs = useCallback(async () => {
     try {
       setIsLoading(true)
       const params = new URLSearchParams({
@@ -107,9 +107,9 @@ export function AdminLogsPanel() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [currentPage, selectedAction, selectedEntityType, dateFrom, dateTo])
 
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     try {
       const params = new URLSearchParams()
       if (dateFrom) params.append('from', dateFrom)
@@ -124,7 +124,7 @@ export function AdminLogsPanel() {
     } catch (error) {
       console.error("Error fetching admin summary:", error)
     }
-  }
+  }, [dateFrom, dateTo])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -132,7 +132,7 @@ export function AdminLogsPanel() {
       await fetchSummary()
     }
     fetchData()
-  }, [currentPage, selectedAction, selectedEntityType, dateFrom, dateTo])
+  }, [fetchLogs, fetchSummary])
 
   const getActionBadgeColor = (action: AdminAction) => {
     const criticalActions: AdminAction[] = [

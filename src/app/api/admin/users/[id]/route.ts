@@ -34,8 +34,26 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       changes.newRole = role
     }
 
-    if (linkLimit !== undefined) {
-      const newLinkLimit = role === UserRole.USER ? linkLimit : -1
+    // Derive the limit from the *effective* role (incoming role, else current),
+    // so editing one field never silently corrupts the other.
+    const effectiveRole = (role as UserRole) || currentUser.role
+    const roleChangedToOrFromUser =
+      role !== undefined && role !== currentUser.role
+    if (linkLimit !== undefined || roleChangedToOrFromUser) {
+      let newLinkLimit: number
+      if (effectiveRole === UserRole.USER) {
+        // Use provided limit; otherwise keep the existing one, or fall back to
+        // the default (10) when the current value is the "unlimited" sentinel.
+        newLinkLimit =
+          linkLimit !== undefined
+            ? linkLimit
+            : currentUser.linkLimit >= 0
+              ? currentUser.linkLimit
+              : 10
+      } else {
+        // Non-USER roles are unlimited.
+        newLinkLimit = -1
+      }
       if (newLinkLimit !== currentUser.linkLimit) {
         updateData.linkLimit = newLinkLimit
         changes.previousLinkLimit = currentUser.linkLimit

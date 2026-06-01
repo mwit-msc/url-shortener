@@ -10,6 +10,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const admin = await requireAdmin()
     const { action, adminNote } = await request.json()
 
+    if (action !== "approve" && action !== "reject") {
+      return NextResponse.json({ error: "Invalid action" }, { status: 400 })
+    }
+
     const customRequest = await prisma.customLinkRequest.findUnique({
       where: { id },
       include: { user: true },
@@ -17,6 +21,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     if (!customRequest) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 })
+    }
+
+    // Only pending requests can be acted on — block double-processing.
+    if (customRequest.status !== "PENDING") {
+      return NextResponse.json(
+        { error: `Request already ${customRequest.status.toLowerCase()}` },
+        { status: 409 },
+      )
     }
 
     if (action === "approve") {

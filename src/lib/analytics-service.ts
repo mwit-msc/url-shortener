@@ -1,5 +1,18 @@
 import { prisma } from "@/lib/prisma"
-import { UserRole } from "@prisma/client"
+import { Prisma, UserRole } from "@prisma/client"
+
+type DailyCountRow = { date: Date; count: number }
+
+// Buckets daily-count rows (already grouped per day by SQL date_trunc) into a
+// date-string keyed map.
+function toDateMap(rows: DailyCountRow[]): Map<string, number> {
+  const map = new Map<string, number>()
+  for (const row of rows) {
+    const date = row.date.toISOString().split("T")[0]
+    map.set(date, (map.get(date) || 0) + Number(row.count))
+  }
+  return map
+}
 import type { LinkAnalyticsSummary, UserAnalyticsOverview, AdminAnalyticsOverview } from "./analytics"
 
 // Get detailed analytics for a specific link (for SPECIAL_USER and ADMIN)
@@ -89,21 +102,14 @@ export async function getLinkAnalytics(
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const dailyClicksData = await prisma.linkAnalytics.groupBy({
-    by: ['clickedAt'],
-    where: {
-      linkId,
-      clickedAt: { gte: thirtyDaysAgo }
-    },
-    _count: { id: true }
-  })
-
-  // Group by date
-  const dailyClicksMap = new Map<string, number>()
-  dailyClicksData.forEach(item => {
-    const date = item.clickedAt.toISOString().split('T')[0]
-    dailyClicksMap.set(date, (dailyClicksMap.get(date) || 0) + item._count.id)
-  })
+  const dailyClicksRows = await prisma.$queryRaw<DailyCountRow[]>(Prisma.sql`
+    SELECT date_trunc('day', "clickedAt") AS date, COUNT(*)::int AS count
+    FROM "link_analytics"
+    WHERE "linkId" = ${linkId} AND "clickedAt" >= ${thirtyDaysAgo}
+    GROUP BY 1
+    ORDER BY 1
+  `)
+  const dailyClicksMap = toDateMap(dailyClicksRows)
 
   // Hourly distribution
   const hourlyDistribution = Array.from({ length: 24 }, (_, hour) => ({
@@ -190,20 +196,15 @@ export async function getUserAnalyticsOverview(
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
 
-  const clickTrendsData = await prisma.linkAnalytics.groupBy({
-    by: ['clickedAt'],
-    where: {
-      link: { userId },
-      clickedAt: { gte: thirtyDaysAgo }
-    },
-    _count: { linkId: true }
-  })
-
-  const clickTrendsMap = new Map<string, number>()
-  clickTrendsData.forEach(item => {
-    const date = item.clickedAt.toISOString().split('T')[0]
-    clickTrendsMap.set(date, (clickTrendsMap.get(date) || 0) + item._count.linkId)
-  })
+  const clickTrendsRows = await prisma.$queryRaw<DailyCountRow[]>(Prisma.sql`
+    SELECT date_trunc('day', a."clickedAt") AS date, COUNT(*)::int AS count
+    FROM "link_analytics" a
+    JOIN "links" l ON l.id = a."linkId"
+    WHERE l."userId" = ${userId} AND a."clickedAt" >= ${thirtyDaysAgo}
+    GROUP BY 1
+    ORDER BY 1
+  `)
+  const clickTrendsMap = toDateMap(clickTrendsRows)
 
   return {
     totalLinks: links.length,
@@ -227,19 +228,17 @@ export async function getUserAnalyticsOverview(
 // Get admin analytics overview (ADMIN only)
 export async function getAdminAnalyticsOverview(
   userRole: UserRole,
-  _dateRange?: { from: Date; to: Date }
+  dateRange?: { from: Date; to: Date }
 ): Promise<AdminAnalyticsOverview | null> {
   if (userRole !== UserRole.ADMIN) {
     return null
   }
 
-  // Optional: apply date range filtering if needed
-  // const whereClause = dateRange ? {
-  //   createdAt: {
-  //     gte: dateRange.from,
-  //     lte: dateRange.to
-  //   }
-  // } : {}
+  // Growth/trend charts are bounded by the requested range, defaulting to the
+  // last 30 days. Top-level totals stay lifetime by design.
+  const trendFrom =
+    dateRange?.from ?? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+  const trendTo = dateRange?.to ?? new Date()
 
   const [
     totalUsers,
@@ -307,60 +306,34 @@ export async function getAdminAnalyticsOverview(
       take: 10
     }),
 
-    // User growth (last 30 days)
-    prisma.user.groupBy({
-      by: ['createdAt'],
-      where: {
-        createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        }
-      },
-      _count: { id: true }
-    }),
+    // User growth (within range)
+    prisma.$queryRaw<DailyCountRow[]>(Prisma.sql`
+      SELECT date_trunc('day', "createdAt") AS date, COUNT(*)::int AS count
+      FROM "users"
+      WHERE "createdAt" >= ${trendFrom} AND "createdAt" <= ${trendTo}
+      GROUP BY 1 ORDER BY 1
+    `),
 
-    // Link growth (last 30 days)
-    prisma.link.groupBy({
-      by: ['createdAt'],
-      where: {
-        createdAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        }
-      },
-      _count: { id: true }
-    }),
+    // Link growth (within range)
+    prisma.$queryRaw<DailyCountRow[]>(Prisma.sql`
+      SELECT date_trunc('day', "createdAt") AS date, COUNT(*)::int AS count
+      FROM "links"
+      WHERE "createdAt" >= ${trendFrom} AND "createdAt" <= ${trendTo}
+      GROUP BY 1 ORDER BY 1
+    `),
 
-    // Click trends (last 30 days)
-    prisma.linkAnalytics.groupBy({
-      by: ['clickedAt'],
-      where: {
-        clickedAt: {
-          gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-        }
-      },
-      _count: { id: true }
-    })
+    // Click trends (within range)
+    prisma.$queryRaw<DailyCountRow[]>(Prisma.sql`
+      SELECT date_trunc('day', "clickedAt") AS date, COUNT(*)::int AS count
+      FROM "link_analytics"
+      WHERE "clickedAt" >= ${trendFrom} AND "clickedAt" <= ${trendTo}
+      GROUP BY 1 ORDER BY 1
+    `)
   ])
 
-  // Process user growth data
-  const userGrowthMap = new Map<string, number>()
-  userGrowthData.forEach(item => {
-    const date = item.createdAt.toISOString().split('T')[0]
-    userGrowthMap.set(date, (userGrowthMap.get(date) || 0) + item._count.id)
-  })
-
-  // Process link growth data
-  const linkGrowthMap = new Map<string, number>()
-  linkGrowthData.forEach(item => {
-    const date = item.createdAt.toISOString().split('T')[0]
-    linkGrowthMap.set(date, (linkGrowthMap.get(date) || 0) + item._count.id)
-  })
-
-  // Process click trends data
-  const clickTrendsMap = new Map<string, number>()
-  clickTrendsData.forEach(item => {
-    const date = item.clickedAt.toISOString().split('T')[0]
-    clickTrendsMap.set(date, (clickTrendsMap.get(date) || 0) + item._count.id)
-  })
+  const userGrowthMap = toDateMap(userGrowthData)
+  const linkGrowthMap = toDateMap(linkGrowthData)
+  const clickTrendsMap = toDateMap(clickTrendsData)
 
   return {
     totalUsers,
