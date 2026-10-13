@@ -7,6 +7,7 @@ import { AdminStats } from "@/components/admin/admin-stats"
 import { CustomRequestsPanel } from "@/components/admin/custom-requests-panel"
 import { UserManagement } from "@/components/admin/user-management"
 import { DomainManagement } from "@/components/admin/domain-management"
+import { QrGeneratorSettingsPanel } from "@/components/admin/qr-generator-settings"
 import { LinkModeration } from "@/components/admin/link-moderation"
 import { AbuseReportsPanel } from "@/components/admin/abuse-reports-panel"
 import { AdminLogsPanel } from "@/components/admin/admin-logs-panel"
@@ -18,7 +19,7 @@ const items = [
   { value: "requests", label: "คำขอที่กำหนดเอง", icon: ClipboardList },
   { value: "abuse", label: "รายงานการละเมิด", icon: Flag },
   { value: "users", label: "ผู้ใช้", icon: Users },
-  { value: "domains", label: "โดเมน", icon: Globe },
+  { value: "domains", label: "โดเมนและการตั้งค่า", icon: Globe },
   { value: "links", label: "การกลั่นกรองลิงก์", icon: Link2 },
   { value: "logs", label: "บันทึกการดำเนินการ", icon: ScrollText },
 ]
@@ -36,7 +37,7 @@ export default function AdminPage() {
   }, [session, status, router])
 
   if (!isAuthorized || !session) {
-    return <div className="status-page"><div className="text-center"><div className="animate-spin rounded-full size-9 border-2 border-border border-t-primary mx-auto mb-4" /><p className="text-muted-foreground text-sm">Loading...</p></div></div>
+    return <div className="status-page"><div className="text-center"><div className="animate-spin rounded-full size-9 border-2 border-border border-t-primary mx-auto mb-4" /><p className="text-muted-foreground text-sm">กำลังโหลด...</p></div></div>
   }
 
   return (
@@ -49,7 +50,7 @@ export default function AdminPage() {
       {active === "requests" && <CustomRequestsPanel />}
       {active === "abuse" && <AbuseReportsPanel />}
       {active === "users" && <UserManagement />}
-      {active === "domains" && <DomainManagement />}
+      {active === "domains" && <div className="space-y-6"><DomainManagement /><QrGeneratorSettingsPanel /></div>}
       {active === "links" && <LinkModeration />}
       {active === "logs" && <AdminLogsPanel />}
     </AppShell>

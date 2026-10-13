@@ -12,7 +12,8 @@ services:
       - GOOGLE_CLIENT_ID=your-google-client-id
       - GOOGLE_CLIENT_SECRET=your-google-client-secret
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     labels:
       # Traefik labels for multi-domain support
       - "traefik.enable=true"
@@ -26,6 +27,11 @@ services:
       - POSTGRES_DB=mwit-link_tiny
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mwit-link_tiny"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:

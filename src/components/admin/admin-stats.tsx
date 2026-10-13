@@ -41,7 +41,7 @@ export function AdminStats() {
         <article className="metric-card" key={label}>
           <div className="metric-label"><span className="metric-icon"><Icon size={16} /></span>{label}</div>
           <div className="metric-value">{value === undefined ? "—" : value.toLocaleString()}</div>
-          <div className="metric-footer">{error ? "โหลดสถิติไม่สำเร็จ" : !stats ? "Loading..." : footer}</div>
+          <div className="metric-footer">{error ? "โหลดสถิติไม่สำเร็จ" : !stats ? "กำลังโหลด..." : footer}</div>
         </article>
       ))}
     </div>

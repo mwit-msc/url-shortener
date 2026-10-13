@@ -11,20 +11,20 @@ export class DirectLinkError extends Error {}
 
 function validateDestination(input: string): string {
   if (!input || Buffer.byteLength(input, "utf8") > MAX_DIRECT_URL_BYTES || /[\u0000-\u001f\u007f]/.test(input)) {
-    throw new DirectLinkError("Enter a URL of up to 4096 bytes without control characters.")
+    throw new DirectLinkError("กรอก URL ไม่เกิน 4096 ไบต์ โดยไม่มีอักขระควบคุม")
   }
   let url: URL
   try {
     url = new URL(input.trim())
   } catch {
-    throw new DirectLinkError("Enter a complete http:// or https:// URL.")
+    throw new DirectLinkError("กรอก URL แบบเต็มที่ขึ้นต้นด้วย http:// หรือ https://")
   }
   if (!['http:', 'https:'].includes(url.protocol) || !url.hostname || url.username || url.password) {
-    throw new DirectLinkError("Use an http:// or https:// URL without embedded login credentials.")
+    throw new DirectLinkError("ใช้ URL แบบ http:// หรือ https:// ที่ไม่มีชื่อผู้ใช้หรือรหัสผ่านใน URL")
   }
   // URL normalization can expand Unicode into percent-encoded bytes.
   if (Buffer.byteLength(url.href, "utf8") > MAX_DIRECT_URL_BYTES) {
-    throw new DirectLinkError("The destination URL is too long for a direct link.")
+    throw new DirectLinkError("URL ปลายทางยาวเกินไปสำหรับลิงก์แบบไม่บันทึก")
   }
   return url.href
 }
@@ -35,9 +35,9 @@ function sign(body: string, secret: string): Buffer {
 }
 
 function decodeBase64Url(input: string): Buffer {
-  if (!/^[A-Za-z0-9_-]+$/.test(input)) throw new DirectLinkError("Invalid direct link.")
+  if (!/^[A-Za-z0-9_-]+$/.test(input)) throw new DirectLinkError("ลิงก์แบบไม่บันทึกไม่ถูกต้อง")
   const bytes = Buffer.from(input, "base64url")
-  if (bytes.toString("base64url") !== input) throw new DirectLinkError("Invalid direct link.")
+  if (bytes.toString("base64url") !== input) throw new DirectLinkError("ลิงก์แบบไม่บันทึกไม่ถูกต้อง")
   return bytes
 }
 
@@ -52,15 +52,15 @@ export function encodeDirectLink(input: string, secret: string): { token: string
 }
 
 export function decodeDirectLink(token: string, secret: string): string {
-  if (token.length > MAX_DIRECT_TOKEN_LENGTH) throw new DirectLinkError("Invalid direct link.")
+  if (token.length > MAX_DIRECT_TOKEN_LENGTH) throw new DirectLinkError("ลิงก์แบบไม่บันทึกไม่ถูกต้อง")
   const parts = token.split(".")
-  if (parts.length !== 3) throw new DirectLinkError("Invalid direct link.")
+  if (parts.length !== 3) throw new DirectLinkError("ลิงก์แบบไม่บันทึกไม่ถูกต้อง")
   const [version, payload, signature] = parts
-  if (version !== "v1r" && version !== "v1d") throw new DirectLinkError("Unsupported direct link version.")
+  if (version !== "v1r" && version !== "v1d") throw new DirectLinkError("ไม่รองรับรูปแบบของลิงก์นี้")
   const suppliedSignature = decodeBase64Url(signature)
   const expectedSignature = sign(`${version}.${payload}`, secret)
   if (suppliedSignature.length !== expectedSignature.length || !timingSafeEqual(suppliedSignature, expectedSignature)) {
-    throw new DirectLinkError("This direct link is invalid or its signing key has changed.")
+    throw new DirectLinkError("ลิงก์ไม่ถูกต้องหรือการตั้งค่าสำหรับยืนยันลิงก์เปลี่ยนไป")
   }
   const bytes = decodeBase64Url(payload)
   try {
@@ -68,7 +68,7 @@ export function decodeDirectLink(token: string, secret: string): string {
     const destination = new TextDecoder("utf-8", { fatal: true }).decode(decoded)
     return validateDestination(destination)
   } catch {
-    throw new DirectLinkError("The destination in this direct link is invalid.")
+    throw new DirectLinkError("URL ปลายทางในลิงก์นี้ไม่ถูกต้อง")
   }
 }
 

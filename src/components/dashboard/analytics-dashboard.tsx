@@ -64,7 +64,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <BarChart3 className="h-16 w-16 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Analytics ขั้นสูง</h3>
+          <h3 className="text-lg font-semibold mb-2">สถิติการใช้งานแบบละเอียด</h3>
           <p className="text-muted-foreground text-center max-w-md">
             คุณสมบัตินี้พร้อมใช้งานสำหรับผู้ใช้พิเศษและผู้ดูแลระบบเท่านั้น
           </p>
@@ -90,7 +90,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
       <Card>
         <CardContent className="flex flex-col items-center justify-center py-12">
           <BarChart3 className="h-16 w-16 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-2">ไม่สามารถโหลดข้อมูล Analytics</h3>
+          <h3 className="text-lg font-semibold mb-2">โหลดสถิติการใช้งานไม่สำเร็จ</h3>
           <Button onClick={() => { setIsLoading(true); fetchOverview() }} variant="outline">
             ลองใหม่อีกครั้ง
           </Button>
@@ -157,8 +157,8 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
       {/* Top Performing Links */}
       <Card>
         <CardHeader>
-          <CardTitle>ลิงก์ที่มีประสิทธิภาพสูงสุด</CardTitle>
-          <CardDescription>ลิงก์ที่ได้รับคลิกมากที่สุด 10 อันดับแรก</CardDescription>
+          <CardTitle>ลิงก์ที่มีคนคลิกมากที่สุด</CardTitle>
+          <CardDescription>10 อันดับลิงก์ตามจำนวนคลิก</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -242,7 +242,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
       {selectedLinkAnalytics && (
         <Card>
           <CardHeader>
-            <CardTitle>Analytics รายละเอียด</CardTitle>
+            <CardTitle>สถิติของลิงก์นี้</CardTitle>
             <CardDescription>ข้อมูลการคลิกแบบละเอียดสำหรับลิงก์ที่เลือก</CardDescription>
           </CardHeader>
           <CardContent>

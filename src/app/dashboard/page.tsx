@@ -12,9 +12,9 @@ import { AnalyticsDashboard } from "@/components/dashboard/analytics-dashboard"
 import { UserRole } from "@prisma/client"
 
 const headings: Record<string, { title: string; description: string }> = {
-  create: { title: "สร้างลิงก์ย่อ", description: "สร้างและจัดการลิงก์ย่อของคุณ พร้อมติดตามสถิติการใช้งาน" },
+  create: { title: "สร้างลิงก์ย่อ", description: "" },
   links: { title: "ลิงก์ของฉัน", description: "จัดการลิงก์ย่อที่คุณสร้างไว้" },
-  analytics: { title: "Analytics", description: "ติดตามสถิติการใช้งานลิงก์ของคุณ" },
+  analytics: { title: "สถิติการใช้งาน", description: "ติดตามสถิติการใช้งานลิงก์ของคุณ" },
 }
 
 export default function DashboardPage() {
@@ -28,7 +28,7 @@ export default function DashboardPage() {
   }, [session, status, router])
 
   if (status !== "authenticated" || !session) {
-    return <div className="status-page"><div className="text-center"><div className="animate-spin rounded-full size-9 border-2 border-border border-t-primary mx-auto mb-4" /><p className="text-muted-foreground text-sm">Loading...</p></div></div>
+    return <div className="status-page"><div className="text-center"><div className="animate-spin rounded-full size-9 border-2 border-border border-t-primary mx-auto mb-4" /><p className="text-muted-foreground text-sm">กำลังโหลด...</p></div></div>
   }
 
   const user = session.user
@@ -36,7 +36,7 @@ export default function DashboardPage() {
   const items = [
     { value: "create", label: "สร้างลิงก์ใหม่", icon: Plus },
     { value: "links", label: "ลิงก์ของฉัน", icon: Link2 },
-    ...(canViewAnalytics ? [{ value: "analytics", label: "Analytics", icon: BarChart3 }] : []),
+    ...(canViewAnalytics ? [{ value: "analytics", label: "สถิติการใช้งาน", icon: BarChart3 }] : []),
   ]
   const visibleActive = active === "analytics" && !canViewAnalytics ? "create" : active
   const heading = headings[visibleActive]
@@ -44,7 +44,7 @@ export default function DashboardPage() {
   return (
     <AppShell user={user} items={items} active={visibleActive} onNavigate={setActive}>
       <div className="page-heading">
-        <div><h1>{heading.title}</h1><p>{heading.description}</p></div>
+        <div><h1>{heading.title}</h1>{heading.description && <p>{heading.description}</p>}</div>
         <span className="page-heading-note"><ShieldCheck size={15} />MWIT TINY</span>
       </div>
       <div className={`dashboard-layout ${visibleActive === "create" ? "creating-link" : ""}`}><DashboardStats userId={user.id} userRole={user.role} linkLimit={user.linkLimit} refreshKey={statsRevision} />

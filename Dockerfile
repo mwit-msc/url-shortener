@@ -15,6 +15,14 @@ COPY package.json bun.lock* bun.lockb* yarn.lock* package-lock.json* pnpm-lock.y
 
 RUN bun install --frozen-lockfile
 
+# The runtime needs the pinned Prisma CLI to apply committed migrations.
+FROM base AS production-deps
+WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
+# Fetch the platform's schema engine at build time, never at app startup.
+RUN bun node_modules/prisma/build/index.js version
+
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
@@ -46,6 +54,10 @@ RUN addgroup --system --gid 1002 bunjs || echo "Group exists" && \
     adduser --system --uid 1002 nextjs || echo "User exists"
 
 COPY --from=builder /app/public ./public
+COPY --from=production-deps --chown=nextjs:bunjs /app/node_modules ./node_modules
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --chmod=755 docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Set the correct permission for prerender cache
 RUN mkdir .next
@@ -66,4 +78,5 @@ ENV HOSTNAME="0.0.0.0"
 RUN ls -l /app
 
 # Use Bun to run server.js
+ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["bun", "run", "server.js"]

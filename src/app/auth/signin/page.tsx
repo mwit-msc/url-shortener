@@ -49,7 +49,7 @@ export default function SignIn() {
             className="google-signin-button"
           >
             {isLoading ? <LoaderCircle className="size-5 animate-spin" /> : <Image src="/google-g.png" width={20} height={20} alt="" className="google-signin-icon" />}
-            {isLoading ? "Signing in..." : "Sign in with Google"}
+            {isLoading ? "กำลังเข้าสู่ระบบ..." : "เข้าสู่ระบบด้วย Google"}
           </Button>
           {error && <p role="alert" className="signin-error">เกิดข้อผิดพลาดระหว่างการยืนยันตัวตน</p>}
         </div>

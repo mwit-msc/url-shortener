@@ -11,9 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Copy, ExternalLink, CheckCircle, ChevronDown, Globe, Link2, LoaderCircle, Plus, ShieldCheck, Clock } from "lucide-react"
+import { Copy, ExternalLink, CheckCircle, ChevronDown, Globe, Link2, LoaderCircle, Plus, ShieldCheck, Clock, QrCode } from "lucide-react"
 import { UserRole } from "@prisma/client"
 import { useToast } from "@/hooks/use-toast"
+import { buildQrGeneratorUrl, parseQrSettings, type QrGeneratorSettings } from "@/lib/qr-generator"
 
 interface CreateLinkFormProps {
   onCreated?: () => void
@@ -34,6 +35,8 @@ interface LinkResult {
   link?: {
     fullUrl: string
     originalUrl: string
+    title?: string
+    description?: string
   }
   customRequest?: {
     id: string
@@ -51,6 +54,7 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
   const [domains, setDomains] = useState<Domain[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState<LinkResult | null>(null)
+  const [qrSettings, setQrSettings] = useState<QrGeneratorSettings | null>(null)
   const { toast } = useToast()
 
   const fetchDomains = () => {
@@ -66,6 +70,17 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
 
   useEffect(() => {
     fetchDomains()
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    fetch("/api/qr-settings", { cache: "no-store", signal: controller.signal })
+      .then(async response => {
+        if (!response.ok) return
+        setQrSettings(parseQrSettings(await response.json()))
+      })
+      .catch(() => {}) // Optional integration must not prevent link creation.
+    return () => controller.abort()
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -91,7 +106,7 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
       const data = await response.json()
 
       if (response.ok) {
-        setResult(data)
+        setResult(data.link ? { ...data, link: { ...data.link, title: mode === "saved" ? title : undefined, description: mode === "saved" ? description : undefined } } : data)
         if (data.kind !== "direct") onCreated?.()
         // Reset form
         setOriginalUrl("")
@@ -103,7 +118,7 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
         if (data.link) {
           toast({
             title: "สร้างลิงก์สำเร็จ!",
-            description: data.kind === "direct" ? "Direct link created. It is not saved to your account." : "ลิงก์ย่อของคุณพร้อมใช้งานแล้ว",
+            description: data.kind === "direct" ? "สร้างลิงก์แบบไม่บันทึกแล้ว ลิงก์นี้จะไม่อยู่ในรายการลิงก์ของคุณ" : "ลิงก์ย่อของคุณพร้อมใช้งานแล้ว",
           })
         } else if (data.customRequest) {
           toast({
@@ -141,24 +156,25 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
   const canUseCustom = user.role === UserRole.SPECIAL_USER || user.role === UserRole.ADMIN
 
   const currentDomain = domains.find(domain => domain.id === selectedDomain)?.domain
-  const previewUrl = result?.link?.fullUrl || (mode === "direct" ? "Created after you submit" : `${currentDomain || "…"}/${useCustom && customShortCode ? customShortCode : "…"}`)
+  const previewUrl = result?.link?.fullUrl || (mode === "direct" ? "ลิงก์จะแสดงที่นี่หลังสร้าง" : `${currentDomain || "…"}/${useCustom && customShortCode ? customShortCode : "…"}`)
   const previewOriginal = result?.link?.originalUrl || originalUrl
+  const qrUrl = qrSettings && result?.link ? buildQrGeneratorUrl(qrSettings, result.link) : null
 
   return (
     <div className="create-workspace">
       <Card className="form-panel gap-0">
         <CardHeader>
           <CardTitle className="panel-title"><Plus size={19} />สร้างลิงก์ใหม่</CardTitle>
-          <CardDescription>{mode === "direct" ? "Create a link that carries its own destination." : "กรอก URL เดิมและเลือกโดเมนสำหรับลิงก์ของคุณ"}</CardDescription>
+          <CardDescription>{mode === "direct" ? "สร้างลิงก์ที่เก็บ URL ปลายทางไว้ในตัวลิงก์" : "กรอก URL เดิมและเลือกโดเมนสำหรับลิงก์ของคุณ"}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <fieldset className="creation-mode form-section" disabled={isLoading}>
-              <legend>Link type</legend>
+              <legend>ประเภทลิงก์</legend>
               <div className="creation-mode-options">
                 {([
-                  { value: "saved", label: "Saved link", description: "Short URL, saved to your account" },
-                  { value: "direct", label: "Direct link", description: "No saved destination or click tracking" },
+                  { value: "saved", label: "ลิงก์ย่อแบบบันทึก", description: "บันทึกไว้ในบัญชีของคุณ" },
+                  { value: "direct", label: "ลิงก์แบบไม่บันทึก", description: "ไม่เก็บข้อมูลปลายทางหรือสถิติการคลิก" },
                 ] as const).map(option => (
                   <label key={option.value} className="mode-option">
                     <input type="radio" name="link-mode" value={option.value} checked={mode === option.value} onChange={() => { setMode(option.value); setResult(null) }} />
@@ -169,7 +185,7 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
             </fieldset>
             <div className="form-section">
               <Label htmlFor="originalUrl" className="field-label"><Link2 size={16} />URL เดิม <span className="text-primary">*</span></Label>
-              <Input id="originalUrl" type="url" placeholder="https://example.com/your-long-link" value={originalUrl} onChange={e => setOriginalUrl(e.target.value)} required className="h-12" />
+              <Input id="originalUrl" type="url" placeholder="https://example.com" value={originalUrl} onChange={e => setOriginalUrl(e.target.value)} required className="h-12" />
               <p className="field-help">ลิงก์ปลายทางที่ต้องการย่อ</p>
             </div>
             {mode === "saved" && <div className="form-section">
@@ -195,9 +211,9 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
               )}
             </div>}
             {mode === "direct" && <div className="direct-info">
-              <strong>Self-contained redirect</strong>
-              <p>The destination is encoded in the link. It may be longer than the original URL, and anyone with the link can decode it.</p>
-              <p>No saved link, analytics, custom alias, or individual deletion. The signing secret stays on the server.</p>
+              <strong>ลิงก์ที่เก็บปลายทางไว้ในตัว</strong>
+              <p>URL ปลายทางจะถูกแปลงเป็นรหัสและเก็บไว้ในลิงก์ จึงอาจยาวกว่า URL เดิม ผู้ที่มีลิงก์สามารถถอดกลับเป็น URL ปลายทางได้ ข้อมูลนี้ไม่ได้ถูกเข้ารหัสลับ</p>
+              <p>ลิงก์นี้จะไม่อยู่ในรายการลิงก์ของคุณ ไม่มีสถิติการคลิก และไม่สามารถกำหนดรหัสสั้นหรือยกเลิกเป็นรายลิงก์ได้</p>
             </div>}
             {mode === "saved" && <details className="optional-fields">
               <summary>ข้อมูลเพิ่มเติม (ไม่บังคับ)<ChevronDown size={16} /></summary>
@@ -207,7 +223,7 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
               </div>
             </details>}
             <div className="form-submit">
-              <Button type="submit" disabled={isLoading || (mode === "saved" && !selectedDomain)} className="w-full" size="lg">{isLoading ? <LoaderCircle size={17} className="animate-spin" /> : <Plus size={17} />}{isLoading ? "กำลังสร้าง..." : mode === "direct" ? "Create direct link" : "สร้างลิงก์ย่อ"}</Button>
+              <Button type="submit" disabled={isLoading || (mode === "saved" && !selectedDomain)} className="w-full" size="lg">{isLoading ? <LoaderCircle size={17} className="animate-spin" /> : <Plus size={17} />}{isLoading ? "กำลังสร้าง..." : mode === "direct" ? "สร้างลิงก์แบบไม่บันทึก" : "สร้างลิงก์ย่อ"}</Button>
             </div>
           </form>
         </CardContent>
@@ -215,23 +231,24 @@ export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
       <div className="preview-column">
         <Card className="link-preview" aria-live="polite">
           <CardHeader>
-            <CardTitle className="flex items-center justify-between gap-3">{result?.link ? "สร้างลิงก์สำเร็จ!" : mode === "direct" ? "Direct link" : "ตัวอย่างลิงก์ย่อ"}{result?.link && <CheckCircle size={18} className="text-[var(--success)]" />}</CardTitle>
-            <CardDescription>{result?.kind === "direct" ? "Ready to share · Not saved" : result?.link ? "ลิงก์ย่อของคุณพร้อมใช้งานแล้ว" : mode === "direct" ? "The link will contain an encoded destination." : "ดูตัวอย่างก่อนสร้างลิงก์"}</CardDescription>
+            <CardTitle className="flex items-center justify-between gap-3">{result?.link ? "สร้างลิงก์สำเร็จ!" : mode === "direct" ? "ลิงก์แบบไม่บันทึก" : "ตัวอย่างลิงก์ย่อ"}{result?.link && <CheckCircle size={18} className="text-[var(--success)]" />}</CardTitle>
+            <CardDescription>{result?.kind === "direct" ? "พร้อมแชร์ · ไม่บันทึกในบัญชี" : result?.link ? "ลิงก์ย่อของคุณพร้อมใช้งานแล้ว" : mode === "direct" ? "URL ปลายทางจะถูกเก็บไว้ในตัวลิงก์" : "ดูตัวอย่างก่อนสร้างลิงก์"}</CardDescription>
           </CardHeader>
           <div className="preview-stage">
             <div className="link-paper">
               <span className="link-paper-icon"><Link2 size={20} /></span>
               <p className="preview-url">{previewUrl}</p>
-              <p className="preview-original">{previewOriginal || "https://example.com/your-long-link"}</p>
+              <p className="preview-original">{previewOriginal || "https://example.com"}</p>
             </div>
-            <p className="preview-caption"><Link2 size={12} />{result?.link ? "พร้อมแชร์" : mode === "direct" ? "Direct links may be longer than the original URL" : "รหัสสั้นจะถูกสร้างเมื่อคุณกดสร้างลิงก์"}</p>
+            <p className="preview-caption"><Link2 size={12} />{result?.link ? "พร้อมแชร์" : mode === "direct" ? "ลิงก์แบบไม่บันทึกอาจยาวกว่า URL เดิม" : "รหัสสั้นจะถูกสร้างเมื่อคุณกดสร้างลิงก์"}</p>
           </div>
           <div className="preview-actions">
-            {result?.kind === "direct" && result.link && <p className="link-length">{result.link.fullUrl.length} characters · Original: {result.link.originalUrl.length} characters. This link is not listed in your saved links.</p>}
+            {result?.kind === "direct" && result.link && <p className="link-length">ความยาว {result.link.fullUrl.length} ตัวอักษร · URL เดิม {result.link.originalUrl.length} ตัวอักษร ลิงก์นี้จะไม่อยู่ในรายการลิงก์ของคุณ</p>}
             {result?.link ? (
               <div className="grid grid-cols-2 gap-3">
                 <Button onClick={() => result.link && copyToClipboard(result.link.fullUrl)}><Copy size={16} />คัดลอก</Button>
                 <Button variant="outline" asChild><a href={result.link.fullUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} />เปิด</a></Button>
+                {qrUrl && <Button variant="outline" asChild className="col-span-2"><a href={qrUrl} target="_blank" rel="noopener noreferrer"><QrCode size={16} />แสดง QR</a></Button>}
               </div>
             ) : result?.customRequest ? (
               <Alert className="status-warning"><Clock size={16} /><AlertDescription>ส่งคำขอลิงก์กำหนดเองแล้ว คำขอของคุณกำลังรอการอนุมัติจากผู้ดูแลระบบ</AlertDescription></Alert>

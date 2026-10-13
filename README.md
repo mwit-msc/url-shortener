@@ -61,3 +61,17 @@ Install the committed dependency versions with `bun install --frozen-lockfile`, 
 Dependencies target stable releases compatible with the application. TypeScript stays on 6.0 and ESLint on 9 while the React/TypeScript lint plugins do not support TypeScript 7 and ESLint 10. Prisma 8 and NextAuth 5 prereleases are excluded.
 
 The release workflow builds and publishes the Docker image on pushes to `release/*`. Use `docker build -t mwit-tiny-check .` to verify that deployment build locally. Local environment files, installed packages, and generated build output are excluded from the Docker context.
+
+## QR generator integration
+
+Administrators can enable QR support under **โดเมนและการตั้งค่า → เครื่องมือสร้าง QR**, enter the generator's page URL, and choose its default logo, style, caption options, colors, and image size. The integration starts disabled and is saved in the database for all users.
+
+After creating either a saved link or a direct link, **แสดง QR** opens that service in a new tab. The `link` parameter carries the generated link itself, not the original destination. Optional link titles and descriptions map to `title` (80 characters) and `description` (120 characters). Queries use `URLSearchParams` to preserve nested URLs and Thai captions. Other mapped parameters are `logo`, `style`, `fontSize`, `align`, `foreground`, `background`, `size`, and `caption`. Automatic caption mode omits `caption`; the service decides whether caption text exists.
+
+## Automatic production migrations
+
+The Docker image includes the pinned Prisma CLI, schema, and committed migration history. Its entrypoint runs `prisma migrate deploy` before starting Next.js. Applied migrations are tracked in PostgreSQL; restarts only apply pending migrations. Prisma's advisory locking remains enabled. A missing database URL, unreachable database, or failed migration stops startup instead of serving against a mismatched schema. The image does not use `db push`, `migrate reset`, or automatically resolve failed migration records.
+
+The QR migration only adds `qr_generator_config`; existing users, domains, and links remain unchanged. Deploy the image with a database user authorized to apply migrations. Existing databases must already have valid Prisma migration history; manually created schemas need an explicit baseline before deployment. Rolling back to the previous image leaves the additional table harmlessly in place.
+
+For runs outside Docker, apply pending migrations with `bun x prisma migrate deploy` before starting the application. Run QR mapping and validation tests with `bun run test:qr`.

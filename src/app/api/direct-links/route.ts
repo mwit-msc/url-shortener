@@ -29,17 +29,17 @@ export async function POST(request: NextRequest) {
     // Issuance uses the existing school-account authentication. Destinations
     // are never persisted; the public /go route has no auth or Prisma import.
     const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    if (!user) return NextResponse.json({ error: "กรุณาเข้าสู่ระบบ" }, { status: 401 })
     const secret = getDirectLinkSecret()
-    if (!secret) return NextResponse.json({ error: "Direct links are not configured." }, { status: 503 })
+    if (!secret) return NextResponse.json({ error: "ยังไม่ได้ตั้งค่าลิงก์แบบไม่บันทึก" }, { status: 503 })
     const body = await readBody(request)
-    if (body === null) return NextResponse.json({ error: "Request is too large." }, { status: 413 })
+    if (body === null) return NextResponse.json({ error: "ข้อมูลที่ส่งมายาวเกินไป" }, { status: 413 })
     let input: unknown
     try { input = JSON.parse(body) } catch {
-      return NextResponse.json({ error: "Send a valid JSON request." }, { status: 400 })
+      return NextResponse.json({ error: "รูปแบบข้อมูลไม่ถูกต้อง" }, { status: 400 })
     }
     if (!input || typeof input !== "object" || !("originalUrl" in input) || typeof input.originalUrl !== "string") {
-      return NextResponse.json({ error: "Enter a destination URL." }, { status: 400 })
+      return NextResponse.json({ error: "กรอก URL ปลายทาง" }, { status: 400 })
     }
     const { token, originalUrl } = encodeDirectLink(input.originalUrl, secret)
     const origin = new URL(process.env.NEXTAUTH_URL || request.url).origin
@@ -51,6 +51,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof DirectLinkError) return NextResponse.json({ error: error.message }, { status: 400 })
     console.error("Error creating direct link")
-    return NextResponse.json({ error: "Unable to create a direct link. Please try again." }, { status: 500 })
+    return NextResponse.json({ error: "สร้างลิงก์แบบไม่บันทึกไม่สำเร็จ กรุณาลองใหม่" }, { status: 500 })
   }
 }

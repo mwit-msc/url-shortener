@@ -7,6 +7,16 @@ datasource db {
   provider = "postgresql"
 }
 
+model QrGeneratorConfig {
+  id           String   @id @default("default")
+  enabled      Boolean  @default(false)
+  generatorUrl String   @default("")
+  options      Json     @default("{}")
+  updatedAt    DateTime @updatedAt
+
+  @@map("qr_generator_config")
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String
