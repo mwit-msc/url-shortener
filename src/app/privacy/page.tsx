@@ -1,15 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Shield, Home, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="public-document">
+
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
@@ -20,7 +17,7 @@ export default function PrivacyPolicy() {
             </Link>
           </Button>
           
-          <Card>
+          <Card className="document-card">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <Shield className="w-12 h-12 text-green-500" />
@@ -61,7 +58,7 @@ export default function PrivacyPolicy() {
                   <h3 className="text-xl font-medium mb-3 mt-6">2.2 ข้อมูลการใช้งาน</h3>
                   <ul className="space-y-1 text-muted-foreground ml-6">
                     <li>• URL ต้นทางที่ท่านย่อ</li>
-                    <li>• ลิงก์สั้นที่สร้างขึ้น</li>
+                    <li>• ลิงก์ย่อที่สร้างขึ้น</li>
                     <li>• ชื่อเรื่องและคำอธิบายของลิงก์</li>
                     <li>• วันที่และเวลาในการสร้างลิงก์</li>
                   </ul>

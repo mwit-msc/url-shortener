@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ReportAbuseDialog } from "@/components/public/report-abuse-dialog"
 import { ReportAbuseForm } from "@/components/public/report-abuse-form"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { Shield, AlertTriangle, Home, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
@@ -17,10 +16,8 @@ function ReportContent() {
   const code = searchParams.get("code") || undefined
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="public-document">
+
 
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
@@ -31,7 +28,7 @@ function ReportContent() {
             </Link>
           </Button>
 
-          <Card>
+          <Card className="document-card">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <Shield className="w-12 h-12 text-red-500" />
@@ -84,7 +81,7 @@ function ReportContent() {
                     <section>
                       <h2 className="text-2xl font-semibold mb-4">Alternative: Full Report Form</h2>
                       <div className="not-prose">
-                        <ReportAbuseForm
+                        <ReportAbuseForm embedded
                           prefilledUrl={url}
                           prefilledDomain={domain}
                           prefilledCode={code}
@@ -100,7 +97,7 @@ function ReportContent() {
                       Use this form to report any inappropriate content or malicious links on our platform.
                     </p>
                     <div className="not-prose">
-                      <ReportAbuseForm />
+                      <ReportAbuseForm embedded />
                     </div>
                   </section>
                 )}

@@ -191,7 +191,7 @@ export function AdminLogsPanel() {
                   <p className="text-sm font-medium text-muted-foreground">การดำเนินการทั้งหมด</p>
                   <p className="text-2xl font-bold">{summary.totalActions.toLocaleString()}</p>
                 </div>
-                <Activity className="h-8 w-8 text-blue-500" />
+                <Activity className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -232,7 +232,7 @@ export function AdminLogsPanel() {
                   <p className="text-sm font-medium text-muted-foreground">ประเภทการดำเนินการ</p>
                   <p className="text-2xl font-bold">{summary.actionCounts.length}</p>
                 </div>
-                <Filter className="h-8 w-8 text-purple-500" />
+                <Filter className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
@@ -251,12 +251,12 @@ export function AdminLogsPanel() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
               <Label htmlFor="action-filter">การดำเนินการ</Label>
-              <Select value={selectedAction} onValueChange={setSelectedAction}>
+              <Select value={selectedAction || "all"} onValueChange={value => setSelectedAction(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกการดำเนินการ" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">ทั้งหมด</SelectItem>
+                  <SelectItem value="all">ทั้งหมด</SelectItem>
                   {Object.entries(actionLabels).map(([action, label]) => (
                     <SelectItem key={action} value={action}>
                       {label}
@@ -268,12 +268,12 @@ export function AdminLogsPanel() {
 
             <div className="space-y-2">
               <Label htmlFor="entity-filter">ประเภทข้อมูล</Label>
-              <Select value={selectedEntityType} onValueChange={setSelectedEntityType}>
+              <Select value={selectedEntityType || "all"} onValueChange={value => setSelectedEntityType(value === "all" ? "" : value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="เลือกประเภทข้อมูล" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">ทั้งหมด</SelectItem>
+                  <SelectItem value="all">ทั้งหมด</SelectItem>
                   <SelectItem value="user">ผู้ใช้</SelectItem>
                   <SelectItem value="link">ลิงก์</SelectItem>
                   <SelectItem value="domain">โดเมน</SelectItem>

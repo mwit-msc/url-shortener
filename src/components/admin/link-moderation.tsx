@@ -44,26 +44,22 @@ export function LinkModeration() {
   const [totalPages, setTotalPages] = useState(1)
   const { toast } = useToast()
 
-  const fetchLinks = useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        page: page.toString(),
-        limit: "20",
-        ...(searchTerm && { search: searchTerm }),
+  const fetchLinks = useCallback(() => {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: "20",
+      ...(searchTerm && { search: searchTerm }),
+    })
+    return fetch(`/api/admin/links?${params}`)
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) {
+          setLinks(data.links)
+          setTotalPages(data.pagination.pages)
+        }
       })
-
-      const response = await fetch(`/api/admin/links?${params}`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setLinks(data.links)
-        setTotalPages(data.pagination.pages)
-      }
-    } catch (error) {
-      console.error("Error fetching links:", error)
-    } finally {
-      setIsLoading(false)
-    }
+      .catch(error => console.error("Error fetching links:", error))
+      .finally(() => setIsLoading(false))
   }, [page, searchTerm])
 
   const deactivateLink = async (linkId: string) => {
@@ -145,7 +141,7 @@ export function LinkModeration() {
       <Card>
         <CardHeader>
           <CardTitle>การกลั่นกรองลิงก์</CardTitle>
-          <CardDescription>ตรวจสอบและกลั่นกรองลิงก์สั้นทั้งหมด</CardDescription>
+          <CardDescription>ตรวจสอบและกลั่นกรองลิงก์ย่อทั้งหมด</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="relative">

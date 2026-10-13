@@ -26,22 +26,15 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
   const [selectedLinkAnalytics, setSelectedLinkAnalytics] = useState<LinkAnalyticsSummary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchOverview = async () => {
-    try {
-      setIsLoading(true)
-      const response = await fetch("/api/analytics/overview")
-      const data = await response.json()
-
-      if (response.ok) {
-        setOverview(data)
-      } else {
-        console.error("Error fetching analytics overview:", data.error)
-      }
-    } catch (error) {
-      console.error("Error fetching analytics overview:", error)
-    } finally {
-      setIsLoading(false)
-    }
+  const fetchOverview = () => {
+    return fetch("/api/analytics/overview")
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) setOverview(data)
+        else console.error("Error fetching analytics overview:", data.error)
+      })
+      .catch(error => console.error("Error fetching analytics overview:", error))
+      .finally(() => setIsLoading(false))
   }
 
   const fetchLinkAnalytics = async (linkId: string) => {
@@ -98,7 +91,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
         <CardContent className="flex flex-col items-center justify-center py-12">
           <BarChart3 className="h-16 w-16 text-muted-foreground mb-4" />
           <h3 className="text-lg font-semibold mb-2">ไม่สามารถโหลดข้อมูล Analytics</h3>
-          <Button onClick={fetchOverview} variant="outline">
+          <Button onClick={() => { setIsLoading(true); fetchOverview() }} variant="outline">
             ลองใหม่อีกครั้ง
           </Button>
         </CardContent>
@@ -117,7 +110,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
                 <p className="text-sm font-medium text-muted-foreground">ลิงก์ทั้งหมด</p>
                 <p className="text-2xl font-bold">{overview.totalLinks.toLocaleString()}</p>
               </div>
-              <Globe className="h-8 w-8 text-blue-500" />
+              <Globe className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -141,7 +134,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
                 <p className="text-sm font-medium text-muted-foreground">คลิกเฉลี่ย/ลิงก์</p>
                 <p className="text-2xl font-bold">{overview.avgClicksPerLink.toFixed(1)}</p>
               </div>
-              <TrendingUp className="h-8 w-8 text-purple-500" />
+              <TrendingUp className="h-8 w-8 text-primary" />
             </div>
           </CardContent>
         </Card>
@@ -306,7 +299,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
             <div className="mt-6 pt-4 border-t">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-blue-600">{selectedLinkAnalytics.totalClicks}</p>
+                  <p className="text-2xl font-bold text-primary">{selectedLinkAnalytics.totalClicks}</p>
                   <p className="text-sm text-muted-foreground">คลิกทั้งหมด</p>
                 </div>
                 <div>
@@ -314,7 +307,7 @@ export function AnalyticsDashboard({ userRole }: AnalyticsDashboardProps) {
                   <p className="text-sm text-muted-foreground">ผู้เข้าชมไม่ซ้ำ</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-purple-600">
+                  <p className="text-2xl font-bold text-primary">
                     {selectedLinkAnalytics.topReferers.length}
                   </p>
                   <p className="text-sm text-muted-foreground">แหล่งอ้างอิง</p>

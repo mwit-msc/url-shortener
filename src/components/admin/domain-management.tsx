@@ -56,38 +56,31 @@ export function DomainManagement() {
   const [bulkEmailInput, setBulkEmailInput] = useState("")
   const { toast } = useToast()
 
+  const fetchDomains = () => {
+    return fetch("/api/admin/domains")
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) {
+          setDomains(data)
+        }
+      })
+      .catch(error => console.error("Error fetching domains:", error))
+      .finally(() => setIsLoading(false))
+  }
+
+  const fetchUsers = () => {
+    return fetch("/api/admin/users")
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) setUsers(data)
+      })
+      .catch(error => console.error("Error fetching users:", error))
+  }
+
   useEffect(() => {
     fetchDomains()
     fetchUsers()
   }, [])
-
-  const fetchDomains = async () => {
-    try {
-      const response = await fetch("/api/admin/domains")
-      const data = await response.json()
-
-      if (response.ok) {
-        setDomains(data)
-      }
-    } catch {
-      console.error("Error fetching domains")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch("/api/admin/users")
-      const data = await response.json()
-
-      if (response.ok) {
-        setUsers(data.users || [])
-      }
-    } catch {
-      console.error("Error fetching users")
-    }
-  }
 
   const addDomain = async () => {
     if (!newDomain.trim()) return
@@ -221,7 +214,7 @@ export function DomainManagement() {
       <Card>
         <CardHeader>
           <CardTitle>การจัดการโดเมน</CardTitle>
-          <CardDescription>จัดการโดเมนสำหรับลิงก์สั้นที่มีอยู่</CardDescription>
+          <CardDescription>จัดการโดเมนสำหรับลิงก์ย่อที่มีอยู่</CardDescription>
         </CardHeader>
         <CardContent>
           <Dialog>
@@ -234,7 +227,7 @@ export function DomainManagement() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>เพิ่มโดเมนใหม่</DialogTitle>
-                <DialogDescription>เพิ่มโดเมนใหม่สำหรับการสร้างลิงก์สั้น</DialogDescription>
+                <DialogDescription>เพิ่มโดเมนใหม่สำหรับการสร้างลิงก์ย่อ</DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">

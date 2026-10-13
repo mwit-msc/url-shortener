@@ -1,6 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 import Link from "next/link"
 
 interface UnauthorizedProps {
@@ -15,10 +14,7 @@ export default async function Unauthorized({ searchParams }: UnauthorizedProps) 
 
   if (reason === "host_restriction" && allowedHost) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="absolute top-4 right-4">
-          <ThemeToggle />
-        </div>
+      <div className="status-page">
         <Card className="w-full max-w-lg">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-destructive">การเข้าถึงถูกจำกัด</CardTitle>
@@ -29,7 +25,7 @@ export default async function Unauthorized({ searchParams }: UnauthorizedProps) 
               กรุณาเข้าใช้งานจาก <span className="font-mono font-medium">{allowedHost}</span> เพื่อใช้งานการเข้าสู่ระบบและฟีเจอร์การจัดการ
             </p>
             <p className="text-xs text-muted-foreground">
-              ลิงก์สั้นยังคงทำงานได้ปกติจากทุกโดเมน
+              ลิงก์ย่อยังคงทำงานได้ปกติจากทุกโดเมน
             </p>
             <div className="flex gap-2 justify-center">
               <Button asChild>
@@ -43,10 +39,7 @@ export default async function Unauthorized({ searchParams }: UnauthorizedProps) 
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="status-page">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold text-destructive">การเข้าถึงถูกปฏิเสธ</CardTitle>

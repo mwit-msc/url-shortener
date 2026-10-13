@@ -37,7 +37,7 @@ const nextConfig = {
     ]
   },
   ...process.env.USEDOCKER === 'true' ? {
-    outputFileTracingRoot: '/app',
+    outputFileTracingRoot: process.cwd(),
     output: 'standalone',
   } : {},
   images: {

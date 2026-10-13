@@ -32,24 +32,21 @@ export function UserManagement() {
   const [usersPerPage] = useState(10)
   const { toast } = useToast()
 
+  const fetchUsers = () => {
+    return fetch("/api/admin/users")
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) {
+          setUsers(data)
+        }
+      })
+      .catch(error => console.error("Error fetching users:", error))
+      .finally(() => setIsLoading(false))
+  }
+
   useEffect(() => {
     fetchUsers()
   }, [])
-
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch("/api/admin/users")
-      const data = await response.json()
-
-      if (response.ok) {
-        setUsers(data)
-      }
-    } catch (error) {
-      console.error("Error fetching users:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     try {
@@ -106,10 +103,6 @@ export function UserManagement() {
     return 0
   })
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, roleFilter])
-
   const getRoleBadge = (role: UserRole) => {
     switch (role) {
       case UserRole.ADMIN:
@@ -145,11 +138,11 @@ export function UserManagement() {
               <Input
                 placeholder="ค้นหาผู้ใช้..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1) }}
                 className="pl-10"
               />
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select value={roleFilter} onValueChange={value => { setRoleFilter(value); setCurrentPage(1) }}>
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="กรองตามบทบาท" />
               </SelectTrigger>

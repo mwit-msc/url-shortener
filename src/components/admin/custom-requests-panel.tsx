@@ -38,24 +38,21 @@ export function CustomRequestsPanel() {
   const [adminNote, setAdminNote] = useState("")
   const { toast } = useToast()
 
+  const fetchRequests = () => {
+    return fetch("/api/admin/custom-requests")
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) {
+          setRequests(data)
+        }
+      })
+      .catch(error => console.error("Error fetching requests:", error))
+      .finally(() => setIsLoading(false))
+  }
+
   useEffect(() => {
     fetchRequests()
   }, [])
-
-  const fetchRequests = async () => {
-    try {
-      const response = await fetch("/api/admin/custom-requests")
-      const data = await response.json()
-
-      if (response.ok) {
-        setRequests(data)
-      }
-    } catch (error) {
-      console.error("Error fetching requests:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleRequest = async (requestId: string, action: "approve" | "reject") => {
     try {

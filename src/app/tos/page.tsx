@@ -1,15 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ThemeToggle } from "@/components/ui/theme-toggle"
 import { ScrollText, Home, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
 export default function TermsOfService() {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="public-document">
+
       
       <div className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-8">
@@ -20,7 +17,7 @@ export default function TermsOfService() {
             </Link>
           </Button>
           
-          <Card>
+          <Card className="document-card">
             <CardHeader className="text-center">
               <div className="flex justify-center mb-4">
                 <ScrollText className="w-12 h-12 text-blue-500" />
@@ -53,8 +50,8 @@ export default function TermsOfService() {
                   <ul className="space-y-2 text-muted-foreground">
                     <li><strong>&ldquo;บริการ&rdquo;</strong> หมายถึง บริการย่อ URL ที่จัดให้โดย MWIT URL Shortener</li>
                     <li><strong>&ldquo;ผู้ใช้&rdquo;</strong> หมายถึง บุคคลที่ใช้บริการของเรา</li>
-                    <li><strong>&ldquo;ลิงก์สั้น&rdquo;</strong> หมายถึง URL ที่ถูกย่อผ่านบริการของเรา</li>
-                    <li><strong>&ldquo;เนื้อหา&rdquo;</strong> หมายถึง ข้อมูล ข้อความ รูปภาพ หรือสื่อใดๆ ที่เชื่อมโยงผ่านลิงก์สั้น</li>
+                    <li><strong>&ldquo;ลิงก์ย่อ&rdquo;</strong> หมายถึง URL ที่ถูกย่อผ่านบริการของเรา</li>
+                    <li><strong>&ldquo;เนื้อหา&rdquo;</strong> หมายถึง ข้อมูล ข้อความ รูปภาพ หรือสื่อใดๆ ที่เชื่อมโยงผ่านลิงก์ย่อ</li>
                   </ul>
                 </section>
 
@@ -98,7 +95,7 @@ export default function TermsOfService() {
                   
                   <h3 className="text-xl font-medium mb-3">5.1 เนื้อหาของผู้ใช้</h3>
                   <p className="text-muted-foreground leading-relaxed mb-4">
-                    ท่านรับผิดชอบเต็มที่ต่อเนื้อหาที่เชื่อมโยงผ่านลิงก์สั้นของท่าน เราไม่ควบคุมหรือตรวจสอบเนื้อหาดังกล่าว
+                    ท่านรับผิดชอบเต็มที่ต่อเนื้อหาที่เชื่อมโยงผ่านลิงก์ย่อของท่าน เราไม่ควบคุมหรือตรวจสอบเนื้อหาดังกล่าว
                   </p>
 
                   <h3 className="text-xl font-medium mb-3">5.2 การรายงานการละเมิด</h3>
@@ -162,7 +159,7 @@ export default function TermsOfService() {
                 <div className="mt-12 p-6 bg-muted rounded-lg">
                   <h3 className="text-lg font-semibold mb-3">ข้อมูลสำคัญ</h3>
                   <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li>• บริการนี้ดำเนินการโดย คณะกรรมการสภานักเรียน โรงเรียนมหิดลวิทยานุสรณ์</li>
+                    <li>• บริการนี้ดำเนินการโดย คณะกรรมการนักเรียนมัลติมีเดีย</li>
                     <li>• เป็นบริการสำหรับการศึกษาและใช้งานภายในองค์กร</li>
                     <li>• การใช้บริการต้องเป็นไปตามนโยบายของสถาบัน</li>
                     <li>• เราสงวนสิทธิ์ในการปรับปรุงและพัฒนาบริการตลอดเวลา</li>

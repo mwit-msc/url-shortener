@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Copy, ExternalLink, Link, Trash2 } from "lucide-react"
+import { Copy, ExternalLink, Link, Trash2, Plus, MousePointer2, ChevronLeft, ChevronRight } from "lucide-react"
 import type { UserRole } from "@prisma/client"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 interface LinksListProps {
+  onCreate?: () => void
   userId: string
   userRole: UserRole
 }
@@ -39,35 +40,33 @@ interface Link {
   }
 }
 
-export function LinksList({}: LinksListProps) {
+export function LinksList({ onCreate }: LinksListProps) {
   const [links, setLinks] = useState<Link[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const { toast } = useToast()
 
-  const fetchLinks = useCallback(async () => {
-    try {
-      const response = await fetch(`/api/links?page=${page}&limit=10`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setLinks(data.links)
-        setTotalPages(data.pagination.pages)
-      }
-    } catch (error) {
-      console.error("Error fetching links:", error)
-    } finally {
-      setIsLoading(false)
-    }
+  const fetchLinks = useCallback(() => {
+    return fetch(`/api/links?page=${page}&limit=10`)
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) {
+          setLinks(data.links)
+          setTotalPages(data.pagination.pages)
+        }
+      })
+      .catch(error => console.error("Error fetching links:", error))
+      .finally(() => setIsLoading(false))
   }, [page])
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast({
-        title: "คัดลอกแล้ว!",
-        description: "ลิงก์ถูกคัดลอกไปยังคลิปบอร์ด",
-    })
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({ title: "คัดลอกแล้ว!", description: "ลิงก์ถูกคัดลอกไปยังคลิปบอร์ด" })
+    } catch {
+      toast({ title: "คัดลอกไม่สำเร็จ", description: "กรุณาคัดลอกลิงก์ด้วยตนเอง", variant: "destructive" })
+    }
   }
 
   const deleteLink = async (linkId: string, hardDelete = false) => {
@@ -105,185 +104,56 @@ export function LinksList({}: LinksListProps) {
   }, [page, fetchLinks])
 
   if (isLoading) {
-    return (
-      <Card className="shadow-sm">
-        <CardContent className="p-6 sm:p-8">
-          <div className="text-center space-y-3">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-            <div className="text-base sm:text-lg">กำลังโหลดลิงก์ของคุณ...</div>
-          </div>
-        </CardContent>
-      </Card>
-    )
+    return <Card><CardContent className="py-8 text-center"><div className="animate-spin rounded-full size-8 border-2 border-border border-t-primary mx-auto mb-3" /><p className="text-sm text-muted-foreground">กำลังโหลดลิงก์...</p></CardContent></Card>
   }
 
   if (links.length === 0) {
     return (
-      <Card className="shadow-sm">
-        <CardHeader className="text-center space-y-3">
-          <CardTitle className="text-xl sm:text-2xl">ลิงก์ของคุณ</CardTitle>
-          <CardDescription className="text-base sm:text-lg">
-            คุณยังไม่ได้สร้างลิงก์ใด ๆ
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center space-y-4">
-          <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto">
-            สร้างลิงก์สั้นลิงก์แรกของคุณโดยไปที่แท็บ &ldquo;สร้างลิงก์ใหม่&rdquo;
-          </p>
-        </CardContent>
+      <Card className="py-12 text-center">
+        <CardHeader><div className="mx-auto mb-3 grid size-12 place-items-center rounded-xl bg-accent text-accent-foreground"><Link size={23} /></div><CardTitle>ลิงก์ของคุณ</CardTitle><CardDescription>คุณยังไม่ได้สร้างลิงก์ใด ๆ</CardDescription></CardHeader>
+        <CardContent><Button onClick={onCreate}><Plus size={16} />สร้างลิงก์ใหม่</Button></CardContent>
       </Card>
     )
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header Card */}
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-xl sm:text-2xl">ลิงก์ของคุณ</CardTitle>
-          <CardDescription className="text-base sm:text-lg">
-            จัดการและติดตามลิงก์สั้นของคุณ (ทั้งหมด {links.length} ลิงก์)
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      {/* Links Grid */}
-      <div className="space-y-3 sm:space-y-4">
-        {links.map((link) => (
-          <Card key={link.id} className="shadow-sm hover:shadow-md transition-shadow">
-            <CardContent className="p-4 sm:p-6">
-              <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                {/* Link Information */}
-                <div className="flex-1 space-y-3 min-w-0">
-                  {/* Short URL and Badges */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <code className="text-sm sm:text-base font-mono bg-muted px-3 py-2 rounded-lg break-all">
-                      {link.fullUrl}
-                    </code>
-                    {link.isCustom && (
-                      <Badge variant="secondary" className="text-xs sm:text-sm">
-                        กำหนดเอง
-                      </Badge>
-                    )}
-                  </div>
-
-                  {/* Original URL */}
-                  <div className="flex items-start gap-2">
-                    <span className="text-sm sm:text-base text-muted-foreground shrink-0">→</span>
-                    <p className="text-sm sm:text-base text-muted-foreground break-all">
-                      {link.originalUrl}
-                    </p>
-                  </div>
-
-                  {/* Title and Description */}
-                  {link.title && (
-                    <p className="text-sm sm:text-base font-medium text-primary">
-                      {link.title}
-                    </p>
-                  )}
-
-                  {link.description && (
-                    <p className="text-sm sm:text-base text-muted-foreground">
-                      {link.description}
-                    </p>
-                  )}
-
-                  {/* Stats */}
-                  <div className="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-muted-foreground pt-2 border-t">
-                    <div className="flex items-center gap-1">
-                      <span className="font-medium text-primary">{link.clicks.toLocaleString()}</span>
-                      <span>คลิก</span>
-                    </div>
-                    <span>•</span>
-                    <span>สร้างเมื่อ {new Date(link.createdAt).toLocaleDateString('th-TH')}</span>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-row lg:flex-col gap-2 shrink-0">
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    onClick={() => copyToClipboard(link.fullUrl)}
-                    className="flex-1 lg:flex-none h-9"
-                  >
-                    <Copy className="h-4 w-4" />
-                    <span className="ml-2 hidden sm:inline">คัดลอก</span>
-                  </Button>
-
-                  <Button size="sm" variant="outline" asChild className="flex-1 lg:flex-none h-9">
-                    <a href={link.fullUrl} target="_blank" rel="noopener noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                      <span className="ml-2 hidden sm:inline">เปิด</span>
-                    </a>
-                  </Button>
-
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="flex-1 lg:flex-none h-9">
-                        <Trash2 className="h-4 w-4" />
-                        <span className="ml-2 hidden sm:inline">ลบ</span>
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent className="sm:max-w-md">
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="text-lg sm:text-xl">ลบลิงก์</AlertDialogTitle>
-                        <AlertDialogDescription className="text-base">
-                          เลือกวิธีการลบลิงก์นี้:
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter className="flex-col gap-3 sm:flex-row">
-                        <AlertDialogCancel className="w-full sm:w-auto">ยกเลิก</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => deleteLink(link.id)} 
-                          className="w-full sm:w-auto bg-amber-500 hover:bg-amber-600 text-white"
-                        >
-                          ซ่อน (สามารถกู้คืนได้)
-                        </AlertDialogAction>
-                        <AlertDialogAction 
-                          onClick={() => deleteLink(link.id, true)}
-                          className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white"
-                        >
-                          ลบถาวร
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <Card className="shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button 
-                variant="outline" 
-                onClick={() => setPage(page - 1)} 
-                disabled={page === 1}
-                className="w-full sm:w-auto"
-              >
-                ← ก่อนหน้า
-              </Button>
-              <span className="flex items-center px-4 text-sm sm:text-base font-medium">
-                หน้า {page} จาก {totalPages}
-              </span>
-              <Button 
-                variant="outline" 
-                onClick={() => setPage(page + 1)} 
-                disabled={page === totalPages}
-                className="w-full sm:w-auto"
-              >
-                ถัดไป →
-              </Button>
+    <Card className="gap-0 overflow-hidden pb-0">
+      <CardHeader className="border-b pb-5">
+        <div className="flex items-center justify-between gap-4">
+          <div><CardTitle>ลิงก์ของคุณ</CardTitle><CardDescription className="mt-1">จัดการและติดตามลิงก์ย่อของคุณ</CardDescription></div>
+          <Button onClick={onCreate} size="sm"><Plus size={15} /><span className="hidden sm:inline">สร้างลิงก์ใหม่</span><span className="sr-only sm:hidden">สร้างลิงก์ใหม่</span></Button>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {links.map(link => (
+          <article key={link.id} className="link-list-row">
+            <div className="link-row-mark"><Link size={19} /></div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2"><p className="text-sm font-medium text-[var(--brand-ink)] break-all">{link.fullUrl}</p>{link.isCustom && <Badge variant="secondary" className="text-[10px]">กำหนดเอง</Badge>}</div>
+              {link.title && <p className="text-sm mt-1">{link.title}</p>}
+              <p className="text-xs text-muted-foreground break-all mt-1">{link.originalUrl}</p>
+              {link.description && <p className="text-xs text-muted-foreground mt-1">{link.description}</p>}
+              <div className="flex flex-wrap gap-4 mt-3 text-[11px] text-muted-foreground"><span className="flex items-center gap-1"><MousePointer2 size={12} />{link.clicks.toLocaleString()} คลิก</span><span>สร้างเมื่อ {new Date(link.createdAt).toLocaleDateString('th-TH')}</span></div>
             </div>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+            <div className="link-row-actions">
+              <Button size="icon" variant="outline" onClick={() => copyToClipboard(link.fullUrl)} aria-label="คัดลอกลิงก์"><Copy size={15} /></Button>
+              <Button size="icon" variant="outline" asChild><a href={link.fullUrl} target="_blank" rel="noopener noreferrer" aria-label="เปิดลิงก์"><ExternalLink size={15} /></a></Button>
+              <AlertDialog>
+                <AlertDialogTrigger asChild><Button size="icon" variant="ghost" className="text-muted-foreground hover:text-destructive" aria-label="ลบลิงก์"><Trash2 size={15} /></Button></AlertDialogTrigger>
+                <AlertDialogContent className="sm:max-w-md">
+                  <AlertDialogHeader><AlertDialogTitle>ลบลิงก์</AlertDialogTitle><AlertDialogDescription>เลือกวิธีการลบลิงก์นี้:</AlertDialogDescription></AlertDialogHeader>
+                  <AlertDialogFooter className="flex-col gap-3 sm:flex-row sm:flex-wrap">
+                    <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => deleteLink(link.id)} className="bg-secondary text-secondary-foreground hover:bg-secondary/80">ซ่อน (สามารถกู้คืนได้)</AlertDialogAction>
+                    <AlertDialogAction onClick={() => deleteLink(link.id, true)} className="bg-destructive text-white hover:bg-destructive/90">ลบถาวร</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </article>
+        ))}
+        {totalPages > 1 && <div className="flex items-center justify-between gap-3 px-6 py-4 border-t"><Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}><ChevronLeft size={15} />ก่อนหน้า</Button><span className="text-xs text-muted-foreground">หน้า {page} จาก {totalPages}</span><Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page === totalPages}>ถัดไป<ChevronRight size={15} /></Button></div>}
+      </CardContent>
+    </Card>
   )
 }

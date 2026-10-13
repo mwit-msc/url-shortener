@@ -11,11 +11,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Copy, ExternalLink, CheckCircle } from "lucide-react"
+import { Copy, ExternalLink, CheckCircle, ChevronDown, Globe, Link2, LoaderCircle, Plus, ShieldCheck, Clock } from "lucide-react"
 import { UserRole } from "@prisma/client"
 import { useToast } from "@/hooks/use-toast"
 
 interface CreateLinkFormProps {
+  onCreated?: () => void
   user: {
     id: string
     role: UserRole
@@ -29,6 +30,7 @@ interface Domain {
 }
 
 interface LinkResult {
+  kind?: "direct"
   link?: {
     fullUrl: string
     originalUrl: string
@@ -38,7 +40,8 @@ interface LinkResult {
   }
 }
 
-export function CreateLinkForm({ user }: CreateLinkFormProps) {
+export function CreateLinkForm({ user, onCreated }: CreateLinkFormProps) {
+  const [mode, setMode] = useState<"saved" | "direct">("saved")
   const [originalUrl, setOriginalUrl] = useState("")
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
@@ -50,22 +53,20 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
   const [result, setResult] = useState<LinkResult | null>(null)
   const { toast } = useToast()
 
+  const fetchDomains = () => {
+    return fetch("/api/domains")
+      .then(async response => {
+        if (!response.ok) throw new Error("Failed to fetch domains")
+        const data: Domain[] = await response.json()
+        setDomains(data)
+        if (data.length > 0) setSelectedDomain(data[0].id)
+      })
+      .catch(error => console.error("Error fetching domains:", error))
+  }
+
   useEffect(() => {
     fetchDomains()
   }, [])
-
-  const fetchDomains = async () => {
-    try {
-      const response = await fetch("/api/domains")
-      const data = await response.json()
-      setDomains(data)
-      if (data.length > 0) {
-        setSelectedDomain(data[0].id)
-      }
-    } catch (error) {
-      console.error("Error fetching domains:", error)
-    }
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,12 +74,12 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
     setResult(null)
 
     try {
-      const response = await fetch("/api/links", {
+      const response = await fetch(mode === "direct" ? "/api/direct-links" : "/api/links", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
+        body: JSON.stringify(mode === "direct" ? { originalUrl } : {
           originalUrl,
           title: title || undefined,
           description: description || undefined,
@@ -91,6 +92,7 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
 
       if (response.ok) {
         setResult(data)
+        if (data.kind !== "direct") onCreated?.()
         // Reset form
         setOriginalUrl("")
         setTitle("")
@@ -101,7 +103,7 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
         if (data.link) {
           toast({
             title: "สร้างลิงก์สำเร็จ!",
-            description: "ลิงก์สั้นของคุณพร้อมใช้งานแล้ว",
+            description: data.kind === "direct" ? "Direct link created. It is not saved to your account." : "ลิงก์ย่อของคุณพร้อมใช้งานแล้ว",
           })
         } else if (data.customRequest) {
           toast({
@@ -127,208 +129,126 @@ export function CreateLinkForm({ user }: CreateLinkFormProps) {
     }
   }
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-    toast({
-      title: "คัดลอกแล้ว!",
-      description: "คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว",
-    })
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({ title: "คัดลอกแล้ว!", description: "คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว" })
+    } catch {
+      toast({ title: "คัดลอกไม่สำเร็จ", description: "กรุณาคัดลอกลิงก์ด้วยตนเอง", variant: "destructive" })
+    }
   }
 
   const canUseCustom = user.role === UserRole.SPECIAL_USER || user.role === UserRole.ADMIN
 
+  const currentDomain = domains.find(domain => domain.id === selectedDomain)?.domain
+  const previewUrl = result?.link?.fullUrl || (mode === "direct" ? "Created after you submit" : `${currentDomain || "…"}/${useCustom && customShortCode ? customShortCode : "…"}`)
+  const previewOriginal = result?.link?.originalUrl || originalUrl
+
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <Card className="shadow-sm">
-        <CardHeader className="space-y-3">
-          <CardTitle className="text-xl sm:text-2xl">สร้างลิงก์สั้น</CardTitle>
-          <CardDescription className="text-base sm:text-lg">
-            {user.role === UserRole.USER && `คุณสามารถสร้างลิงก์ได้สูงสุด ${user.linkLimit} ลิงก์`}
-            {user.role === UserRole.SPECIAL_USER && "คุณสามารถสร้างลิงก์ได้ไม่จำกัด"}
-            {user.role === UserRole.ADMIN && "คุณมีสิทธิ์เข้าถึงฟีเจอร์ทั้งหมด"}
-          </CardDescription>
+    <div className="create-workspace">
+      <Card className="form-panel gap-0">
+        <CardHeader>
+          <CardTitle className="panel-title"><Plus size={19} />สร้างลิงก์ใหม่</CardTitle>
+          <CardDescription>{mode === "direct" ? "Create a link that carries its own destination." : "กรอก URL เดิมและเลือกโดเมนสำหรับลิงก์ของคุณ"}</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Original URL Input */}
-            <div className="space-y-3">
-              <Label htmlFor="originalUrl" className="text-base font-medium">
-                URL เดิม *
-              </Label>
-              <Input
-                id="originalUrl"
-                type="url"
-                placeholder="https://example.com"
-                value={originalUrl}
-                onChange={(e) => setOriginalUrl(e.target.value)}
-                required
-                className="h-12 text-base"
-              />
-            </div>
-
-            {/* Domain Selection */}
-            <div className="space-y-3">
-              <Label htmlFor="domain" className="text-base font-medium">
-                โดเมน *
-              </Label>
-              <Select value={selectedDomain} onValueChange={setSelectedDomain} required>
-                <SelectTrigger className="h-12 text-base">
-                  <SelectValue placeholder="เลือกโดเมน" />
-                </SelectTrigger>
-                <SelectContent>
-                  {domains.map((domain) => (
-                    <SelectItem key={domain.id} value={domain.id} className="text-base">
-                      {domain.domain}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Custom Short Code Toggle */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3 p-4 border rounded-lg bg-muted/30">
-                <Switch
-                  id="useCustom"
-                  checked={useCustom}
-                  onCheckedChange={setUseCustom}
-                  disabled={!canUseCustom && user.role === UserRole.USER}
-                />
-                <Label htmlFor="useCustom" className="text-base font-medium cursor-pointer">
-                  ใช้รหัสสั้นแบบกำหนดเอง
-                  {!canUseCustom && user.role === UserRole.USER && (
-                    <span className="text-sm text-muted-foreground block">
-                      (ต้องได้รับการอนุมัติ)
-                    </span>
-                  )}
-                </Label>
+          <form onSubmit={handleSubmit}>
+            <fieldset className="creation-mode form-section" disabled={isLoading}>
+              <legend>Link type</legend>
+              <div className="creation-mode-options">
+                {([
+                  { value: "saved", label: "Saved link", description: "Short URL, saved to your account" },
+                  { value: "direct", label: "Direct link", description: "No saved destination or click tracking" },
+                ] as const).map(option => (
+                  <label key={option.value} className="mode-option">
+                    <input type="radio" name="link-mode" value={option.value} checked={mode === option.value} onChange={() => { setMode(option.value); setResult(null) }} />
+                    <span><strong>{option.label}</strong><small>{option.description}</small></span>
+                  </label>
+                ))}
               </div>
-
+            </fieldset>
+            <div className="form-section">
+              <Label htmlFor="originalUrl" className="field-label"><Link2 size={16} />URL เดิม <span className="text-primary">*</span></Label>
+              <Input id="originalUrl" type="url" placeholder="https://example.com/your-long-link" value={originalUrl} onChange={e => setOriginalUrl(e.target.value)} required className="h-12" />
+              <p className="field-help">ลิงก์ปลายทางที่ต้องการย่อ</p>
+            </div>
+            {mode === "saved" && <div className="form-section">
+              <Label htmlFor="domain" className="field-label"><Globe size={16} />โดเมน <span className="text-primary">*</span></Label>
+              <Select value={selectedDomain} onValueChange={value => { if (value) setSelectedDomain(value) }} required>
+                <SelectTrigger id="domain" className="w-full h-11"><SelectValue placeholder="เลือกโดเมน" /></SelectTrigger>
+                <SelectContent>{domains.map(domain => <SelectItem key={domain.id} value={domain.id}>{domain.domain}</SelectItem>)}</SelectContent>
+              </Select>
+              <div className="custom-toggle">
+                <div>
+                  <Label htmlFor="useCustom" className="text-sm cursor-pointer">ใช้รหัสสั้นแบบกำหนดเอง</Label>
+                  <p className="field-help mt-1">{canUseCustom ? "กำหนดรหัสสั้นของคุณเอง" : "ต้องได้รับการอนุมัติ"}</p>
+                </div>
+                <Switch id="useCustom" checked={useCustom} onCheckedChange={setUseCustom} disabled={!canUseCustom && user.role === UserRole.USER} />
+              </div>
               {useCustom && (
-                <div className="space-y-3">
-                  <Label htmlFor="customShortCode" className="text-base font-medium">
-                    รหัสสั้นแบบกำหนดเอง
-                  </Label>
-                  <Input
-                    id="customShortCode"
-                    placeholder="my-custom-link"
-                    value={customShortCode}
-                    onChange={(e) => setCustomShortCode(e.target.value)}
-                    pattern="[a-zA-Z0-9_-]{3,20}"
-                    title="3-20 ตัวอักษร ใช้ตัวอักษร ตัวเลข เครื่องหมายขีดกลาง และขีดล่างเท่านั้น"
-                    className="h-12 text-base"
-                  />
-                  {!canUseCustom && (
-                    <Alert className="border-amber-200 bg-amber-50">
-                      <AlertDescription className="text-base">
-                        รหัสสั้นแบบกำหนดเองต้องได้รับการอนุมัติจากผู้ดูแลระบบสำหรับผู้ใช้ทั่วไป
-                      </AlertDescription>
-                    </Alert>
-                  )}
+                <div className="mt-4">
+                  <Label htmlFor="customShortCode" className="field-label">รหัสสั้นแบบกำหนดเอง</Label>
+                  <Input id="customShortCode" placeholder="my-custom-link" value={customShortCode} onChange={e => setCustomShortCode(e.target.value)} pattern="[a-zA-Z0-9_\-]{3,20}" title="3-20 ตัวอักษร ใช้ตัวอักษร ตัวเลข เครื่องหมายขีดกลาง และขีดล่างเท่านั้น" />
+                  <p className="field-help">3–20 ตัวอักษร ใช้ตัวอักษร ตัวเลข ขีดกลาง และขีดล่าง</p>
+                  {!canUseCustom && <Alert className="status-warning mt-3"><AlertDescription>รหัสสั้นแบบกำหนดเองต้องได้รับการอนุมัติจากผู้ดูแลระบบสำหรับผู้ใช้ทั่วไป</AlertDescription></Alert>}
                 </div>
               )}
-            </div>
-
-            {/* Optional Fields */}
-            <div className="space-y-6 pt-6 border-t">
-              <h4 className="text-lg font-medium text-muted-foreground">ข้อมูลเพิ่มเติม (ไม่บังคับ)</h4>
-              
-              <div className="space-y-3">
-                <Label htmlFor="title" className="text-base font-medium">
-                  หัวข้อ
-                </Label>
-                <Input 
-                  id="title" 
-                  placeholder="หัวข้อสำหรับลิงก์นี้" 
-                  value={title} 
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="h-12 text-base" 
-                />
+            </div>}
+            {mode === "direct" && <div className="direct-info">
+              <strong>Self-contained redirect</strong>
+              <p>The destination is encoded in the link. It may be longer than the original URL, and anyone with the link can decode it.</p>
+              <p>No saved link, analytics, custom alias, or individual deletion. The signing secret stays on the server.</p>
+            </div>}
+            {mode === "saved" && <details className="optional-fields">
+              <summary>ข้อมูลเพิ่มเติม (ไม่บังคับ)<ChevronDown size={16} /></summary>
+              <div className="space-y-4">
+                <div><Label htmlFor="title" className="field-label">หัวข้อ</Label><Input id="title" placeholder="หัวข้อสำหรับลิงก์นี้" value={title} onChange={e => setTitle(e.target.value)} /></div>
+                <div><Label htmlFor="description" className="field-label">คำอธิบาย</Label><Textarea id="description" placeholder="คำอธิบายเกี่ยวกับลิงก์นี้..." value={description} onChange={e => setDescription(e.target.value)} rows={3} /></div>
               </div>
-
-              <div className="space-y-3">
-                <Label htmlFor="description" className="text-base font-medium">
-                  คำอธิบาย
-                </Label>
-                <Textarea
-                  id="description"
-                  placeholder="คำอธิบายเกี่ยวกับลิงก์นี้..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows={4}
-                  className="text-base resize-none"
-                />
-              </div>
+            </details>}
+            <div className="form-submit">
+              <Button type="submit" disabled={isLoading || (mode === "saved" && !selectedDomain)} className="w-full" size="lg">{isLoading ? <LoaderCircle size={17} className="animate-spin" /> : <Plus size={17} />}{isLoading ? "กำลังสร้าง..." : mode === "direct" ? "Create direct link" : "สร้างลิงก์ย่อ"}</Button>
             </div>
-
-            {/* Submit Button */}
-            <Button 
-              type="submit" 
-              disabled={isLoading} 
-              className="w-full h-12 text-base font-medium"
-              size="lg"
-            >
-              {isLoading ? "กำลังสร้าง..." : "สร้างลิงก์สั้น"}
-            </Button>
           </form>
         </CardContent>
       </Card>
-
-      {/* Success Result */}
-      {result && result.link && (
-        <Card className="shadow-sm border-green-200 bg-green-50">
+      <div className="preview-column">
+        <Card className="link-preview" aria-live="polite">
           <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-green-700">
-              <CheckCircle className="h-6 w-6" />
-              <span className="text-xl">สร้างลิงก์สำเร็จ!</span>
-            </CardTitle>
+            <CardTitle className="flex items-center justify-between gap-3">{result?.link ? "สร้างลิงก์สำเร็จ!" : mode === "direct" ? "Direct link" : "ตัวอย่างลิงก์ย่อ"}{result?.link && <CheckCircle size={18} className="text-[var(--success)]" />}</CardTitle>
+            <CardDescription>{result?.kind === "direct" ? "Ready to share · Not saved" : result?.link ? "ลิงก์ย่อของคุณพร้อมใช้งานแล้ว" : mode === "direct" ? "The link will contain an encoded destination." : "ดูตัวอย่างก่อนสร้างลิงก์"}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center gap-3 p-4 bg-white rounded-lg border">
-              <code className="flex-1 text-base font-mono break-all">{result.link.fullUrl}</code>
-              <div className="flex gap-2 shrink-0">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={() => result.link && copyToClipboard(result.link.fullUrl)} 
-                  disabled={!result.link}
-                  className="h-9"
-                >
-                  <Copy className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-2">คัดลอก</span>
-                </Button>
-                <Button size="sm" variant="outline" asChild className="h-9">
-                  <a href={result.link.fullUrl} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-4 w-4" />
-                    <span className="hidden sm:inline ml-2">เปิด</span>
-                  </a>
-                </Button>
-              </div>
+          <div className="preview-stage">
+            <div className="link-paper">
+              <span className="link-paper-icon"><Link2 size={20} /></span>
+              <p className="preview-url">{previewUrl}</p>
+              <p className="preview-original">{previewOriginal || "https://example.com/your-long-link"}</p>
             </div>
-            <p className="text-base text-muted-foreground">
-              <span className="font-medium">URL เดิม:</span> {result.link.originalUrl}
-            </p>
-          </CardContent>
+            <p className="preview-caption"><Link2 size={12} />{result?.link ? "พร้อมแชร์" : mode === "direct" ? "Direct links may be longer than the original URL" : "รหัสสั้นจะถูกสร้างเมื่อคุณกดสร้างลิงก์"}</p>
+          </div>
+          <div className="preview-actions">
+            {result?.kind === "direct" && result.link && <p className="link-length">{result.link.fullUrl.length} characters · Original: {result.link.originalUrl.length} characters. This link is not listed in your saved links.</p>}
+            {result?.link ? (
+              <div className="grid grid-cols-2 gap-3">
+                <Button onClick={() => result.link && copyToClipboard(result.link.fullUrl)}><Copy size={16} />คัดลอก</Button>
+                <Button variant="outline" asChild><a href={result.link.fullUrl} target="_blank" rel="noopener noreferrer"><ExternalLink size={16} />เปิด</a></Button>
+              </div>
+            ) : result?.customRequest ? (
+              <Alert className="status-warning"><Clock size={16} /><AlertDescription>ส่งคำขอลิงก์กำหนดเองแล้ว คำขอของคุณกำลังรอการอนุมัติจากผู้ดูแลระบบ</AlertDescription></Alert>
+            ) : <p className="text-xs text-muted-foreground">กรอกข้อมูลแล้วกดสร้างลิงก์ย่อ จากนั้นคัดลอกลิงก์เพื่อแชร์</p>}
+          </div>
         </Card>
-      )}
-
-      {/* Custom Request Pending */}
-      {result && result.customRequest && (
-        <Card className="shadow-sm border-amber-200 bg-amber-50">
-          <CardHeader>
-            <CardTitle className="text-xl text-amber-700">ส่งคำขอลิงก์กำหนดเองแล้ว</CardTitle>
-          </CardHeader>
+        <Card className="account-card gap-3">
+          <CardHeader><CardTitle className="panel-title text-base"><ShieldCheck size={17} />ข้อมูลบัญชี</CardTitle></CardHeader>
           <CardContent>
-            <Alert className="border-amber-200 bg-white">
-              <AlertDescription className="text-base">
-                คำขอรหัสสั้นแบบกำหนดเองของคุณได้ถูกส่งแล้วและกำลังรอการอนุมัติจากผู้ดูแลระบบ 
-                คุณจะได้รับการแจ้งเตือนเมื่อได้รับการตรวจสอบแล้ว
-              </AlertDescription>
-            </Alert>
+            <dl className="account-details">
+              <div><dt>บทบาท</dt><dd>{user.role === UserRole.ADMIN ? "ผู้ดูแลระบบ" : user.role === UserRole.SPECIAL_USER ? "ผู้ใช้พิเศษ" : "ผู้ใช้ทั่วไป"}</dd></div>
+              <div><dt>ขีดจำกัดลิงก์</dt><dd>{user.role === UserRole.USER ? `${user.linkLimit} ลิงก์` : "ไม่จำกัด"}</dd></div>
+              <div><dt>URL ที่กำหนดเอง</dt><dd>{user.role === UserRole.USER ? "ต้องได้รับอนุมัติ" : "ใช้ได้ทันที"}</dd></div>
+            </dl>
           </CardContent>
         </Card>
-      )}
+      </div>
     </div>
   )
 }
-

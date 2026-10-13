@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -64,10 +64,10 @@ const statusLabels = {
 }
 
 const statusColors = {
-  PENDING: "bg-yellow-500",
-  INVESTIGATING: "bg-blue-500", 
-  RESOLVED: "bg-green-500",
-  DISMISSED: "bg-gray-500"
+  PENDING: "status-warning",
+  INVESTIGATING: "bg-accent text-accent-foreground",
+  RESOLVED: "status-success",
+  DISMISSED: "bg-muted text-muted-foreground"
 }
 
 export function AbuseReportsPanel() {
@@ -82,30 +82,27 @@ export function AbuseReportsPanel() {
     reportType: "all"
   })
 
+  const fetchReports = useCallback(() => {
+    const params = new URLSearchParams()
+    if (filter.status) params.append("status", filter.status)
+    if (filter.reportType) params.append("reportType", filter.reportType)
+
+    return fetch(`/api/abuse-reports?${params}`)
+      .then(async response => {
+        const data = await response.json()
+        if (response.ok) {
+          setReports(data.reports)
+        } else {
+          console.error("Failed to fetch reports:", data.error)
+        }
+      })
+      .catch(error => console.error("Error fetching reports:", error))
+      .finally(() => setIsLoading(false))
+  }, [filter])
+
   useEffect(() => {
     fetchReports()
-  }, [filter]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const fetchReports = async () => {
-    try {
-      const params = new URLSearchParams()
-      if (filter.status) params.append("status", filter.status)
-      if (filter.reportType) params.append("reportType", filter.reportType)
-      
-      const response = await fetch(`/api/abuse-reports?${params}`)
-      const data = await response.json()
-
-      if (response.ok) {
-        setReports(data.reports)
-      } else {
-        console.error("Failed to fetch reports:", data.error)
-      }
-    } catch (error) {
-      console.error("Error fetching reports:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  }, [fetchReports])
 
   const handleReviewReport = async () => {
     if (!selectedReport || !newStatus) return
@@ -151,7 +148,7 @@ export function AbuseReportsPanel() {
 
   return (
     <div className="space-y-6">
-      <div className="flex gap-4">
+      <div className="flex flex-wrap gap-3">
         <Select value={filter.status} onValueChange={(value) => setFilter(prev => ({ ...prev, status: value }))}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
