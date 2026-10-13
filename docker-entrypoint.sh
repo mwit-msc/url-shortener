@@ -6,9 +6,8 @@ if [ -z "${DATABASE_URL:-}" ]; then
   exit 64
 fi
 
-# Deploy only committed migrations. Prisma tracks applied migrations and uses
-# PostgreSQL advisory locking. A failed migration prevents the app from starting.
-echo "Applying pending database migrations..."
-bun /app/node_modules/prisma/build/index.js migrate deploy
+# Adopt verified pre-existing schemas, then deploy only pending migrations.
+# The runner never resets the database or uses db push/accept-data-loss.
+bun /app/scripts/migrate.mjs
 
 exec "$@"

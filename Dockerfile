@@ -57,6 +57,7 @@ COPY --from=builder /app/public ./public
 COPY --from=production-deps --chown=nextjs:bunjs /app/node_modules ./node_modules
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
+COPY --from=builder /app/scripts ./scripts
 COPY --chmod=755 docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Set the correct permission for prerender cache

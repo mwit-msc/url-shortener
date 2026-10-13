@@ -1,0 +1,230 @@
+[
+  {
+    "name": "20250818144039_initial",
+    "checksum": "3e88639b4ff50eaca9312cd3a341809ec8411a639c9d4073c32c2deaaddd74d3",
+    "definitions": {
+      "columns": [
+        ["accounts", "access_token", "text", -1, false, null],
+        ["accounts", "expires_at", "int4", -1, false, null],
+        ["accounts", "id", "text", -1, true, null],
+        ["accounts", "id_token", "text", -1, false, null],
+        ["accounts", "provider", "text", -1, true, null],
+        ["accounts", "providerAccountId", "text", -1, true, null],
+        ["accounts", "refresh_token", "text", -1, false, null],
+        ["accounts", "scope", "text", -1, false, null],
+        ["accounts", "session_state", "text", -1, false, null],
+        ["accounts", "token_type", "text", -1, false, null],
+        ["accounts", "type", "text", -1, true, null],
+        ["accounts", "userId", "text", -1, true, null],
+        ["custom_link_requests", "adminNote", "text", -1, false, null],
+        ["custom_link_requests", "createdAt", "timestamp", 3, true, "CURRENT_TIMESTAMP"],
+        ["custom_link_requests", "description", "text", -1, false, null],
+        ["custom_link_requests", "domainId", "text", -1, true, null],
+        ["custom_link_requests", "id", "text", -1, true, null],
+        ["custom_link_requests", "originalUrl", "text", -1, true, null],
+        ["custom_link_requests", "reviewedAt", "timestamp", 3, false, null],
+        ["custom_link_requests", "reviewedBy", "text", -1, false, null],
+        ["custom_link_requests", "shortCode", "text", -1, true, null],
+        ["custom_link_requests", "status", "CustomRequestStatus", -1, true, "'PENDING'::\"CustomRequestStatus\""],
+        ["custom_link_requests", "title", "text", -1, false, null],
+        ["custom_link_requests", "updatedAt", "timestamp", 3, true, null],
+        ["custom_link_requests", "userId", "text", -1, true, null],
+        ["domains", "createdAt", "timestamp", 3, true, "CURRENT_TIMESTAMP"],
+        ["domains", "domain", "text", -1, true, null],
+        ["domains", "id", "text", -1, true, null],
+        ["domains", "isActive", "bool", -1, true, "true"],
+        ["domains", "updatedAt", "timestamp", 3, true, null],
+        ["link_analytics", "city", "text", -1, false, null],
+        ["link_analytics", "clickedAt", "timestamp", 3, true, "CURRENT_TIMESTAMP"],
+        ["link_analytics", "country", "text", -1, false, null],
+        ["link_analytics", "id", "text", -1, true, null],
+        ["link_analytics", "ipAddress", "text", -1, false, null],
+        ["link_analytics", "linkId", "text", -1, true, null],
+        ["link_analytics", "referer", "text", -1, false, null],
+        ["link_analytics", "userAgent", "text", -1, false, null],
+        ["links", "clicks", "int4", -1, true, "0"],
+        ["links", "createdAt", "timestamp", 3, true, "CURRENT_TIMESTAMP"],
+        ["links", "description", "text", -1, false, null],
+        ["links", "domainId", "text", -1, true, null],
+        ["links", "expiresAt", "timestamp", 3, false, null],
+        ["links", "id", "text", -1, true, null],
+        ["links", "isActive", "bool", -1, true, "true"],
+        ["links", "isCustom", "bool", -1, true, "false"],
+        ["links", "originalUrl", "text", -1, true, null],
+        ["links", "shortCode", "text", -1, true, null],
+        ["links", "title", "text", -1, false, null],
+        ["links", "updatedAt", "timestamp", 3, true, null],
+        ["links", "userId", "text", -1, true, null],
+        ["sessions", "expires", "timestamp", 3, true, null],
+        ["sessions", "id", "text", -1, true, null],
+        ["sessions", "sessionToken", "text", -1, true, null],
+        ["sessions", "userId", "text", -1, true, null],
+        ["users", "createdAt", "timestamp", 3, true, "CURRENT_TIMESTAMP"],
+        ["users", "email", "text", -1, true, null],
+        ["users", "emailVerified", "timestamp", 3, false, null],
+        ["users", "id", "text", -1, true, null],
+        ["users", "image", "text", -1, false, null],
+        ["users", "linkLimit", "int4", -1, true, "10"],
+        ["users", "name", "text", -1, false, null],
+        ["users", "role", "UserRole", -1, true, "'USER'::\"UserRole\""],
+        ["users", "updatedAt", "timestamp", 3, true, null],
+        ["verificationtokens", "expires", "timestamp", 3, true, null],
+        ["verificationtokens", "identifier", "text", -1, true, null],
+        ["verificationtokens", "token", "text", -1, true, null]
+      ],
+      "enums": [
+        ["CustomRequestStatus", ["PENDING", "APPROVED", "REJECTED"]],
+        ["UserRole", ["USER", "SPECIAL_USER", "ADMIN"]]
+      ],
+      "constraints": [
+        ["accounts", "accounts_pkey", "PRIMARY KEY (id)"],
+        ["accounts", "accounts_userId_fkey", "FOREIGN KEY (\"userId\") REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["custom_link_requests", "custom_link_requests_pkey", "PRIMARY KEY (id)"],
+        ["custom_link_requests", "custom_link_requests_userId_fkey", "FOREIGN KEY (\"userId\") REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["domains", "domains_pkey", "PRIMARY KEY (id)"],
+        ["link_analytics", "link_analytics_linkId_fkey", "FOREIGN KEY (\"linkId\") REFERENCES links(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["link_analytics", "link_analytics_pkey", "PRIMARY KEY (id)"],
+        ["links", "links_domainId_fkey", "FOREIGN KEY (\"domainId\") REFERENCES domains(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["links", "links_pkey", "PRIMARY KEY (id)"],
+        ["links", "links_userId_fkey", "FOREIGN KEY (\"userId\") REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["sessions", "sessions_pkey", "PRIMARY KEY (id)"],
+        ["sessions", "sessions_userId_fkey", "FOREIGN KEY (\"userId\") REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["users", "users_pkey", "PRIMARY KEY (id)"]
+      ],
+      "indexes": [
+        ["accounts", "accounts_pkey", true, true, "btree", ["id"], null],
+        ["accounts", "accounts_provider_providerAccountId_key", true, true, "btree", ["provider", "\"providerAccountId\""], null],
+        ["custom_link_requests", "custom_link_requests_pkey", true, true, "btree", ["id"], null],
+        ["domains", "domains_domain_key", true, true, "btree", ["domain"], null],
+        ["domains", "domains_pkey", true, true, "btree", ["id"], null],
+        ["link_analytics", "link_analytics_pkey", true, true, "btree", ["id"], null],
+        ["links", "links_pkey", true, true, "btree", ["id"], null],
+        ["links", "links_shortCode_domainId_key", true, true, "btree", ["\"shortCode\"", "\"domainId\""], null],
+        ["sessions", "sessions_pkey", true, true, "btree", ["id"], null],
+        ["sessions", "sessions_sessionToken_key", true, true, "btree", ["\"sessionToken\""], null],
+        ["users", "users_email_key", true, true, "btree", ["email"], null],
+        ["users", "users_pkey", true, true, "btree", ["id"], null],
+        ["verificationtokens", "verificationtokens_identifier_token_key", true, true, "btree", ["identifier", "token"], null],
+        ["verificationtokens", "verificationtokens_token_key", true, true, "btree", ["token"], null]
+      ]
+    }
+  },
+  {
+    "name": "20250819035146_add_domain_restriction",
+    "checksum": "ace5450c3fea33764a5bb39686963c22125ffb84fe2b2c00189b411730334d5f",
+    "definitions": {
+      "columns": [
+        ["domain_allowed_users", "domainId", "text", -1, true, null],
+        ["domain_allowed_users", "id", "text", -1, true, null],
+        ["domain_allowed_users", "userId", "text", -1, true, null],
+        ["domains", "restriction", "DomainRestriction", -1, true, "'EVERYONE'::\"DomainRestriction\""]
+      ],
+      "enums": [
+        ["DomainRestriction", ["EVERYONE", "ADMIN_ONLY", "SPECIFIC_USERS"]]
+      ],
+      "constraints": [
+        ["domain_allowed_users", "domain_allowed_users_domainId_fkey", "FOREIGN KEY (\"domainId\") REFERENCES domains(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["domain_allowed_users", "domain_allowed_users_pkey", "PRIMARY KEY (id)"],
+        ["domain_allowed_users", "domain_allowed_users_userId_fkey", "FOREIGN KEY (\"userId\") REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE"]
+      ],
+      "indexes": [
+        ["domain_allowed_users", "domain_allowed_users_domainId_userId_key", true, true, "btree", ["\"domainId\"", "\"userId\""], null],
+        ["domain_allowed_users", "domain_allowed_users_pkey", true, true, "btree", ["id"], null]
+      ]
+    }
+  },
+  {
+    "name": "20250819060658_add_report_abuse",
+    "checksum": "1eb85a0d6516bc2f2c3583ad6ad54db091d9b40b47c5cabc8218229c46827c8f",
+    "definitions": {
+      "columns": [
+        ["abuse_reports", "adminNote", "text", -1, false, null],
+        ["abuse_reports", "createdAt", "timestamp", 3, true, "CURRENT_TIMESTAMP"],
+        ["abuse_reports", "description", "text", -1, false, null],
+        ["abuse_reports", "id", "text", -1, true, null],
+        ["abuse_reports", "linkId", "text", -1, true, null],
+        ["abuse_reports", "reportType", "AbuseReportType", -1, true, null],
+        ["abuse_reports", "reporterEmail", "text", -1, false, null],
+        ["abuse_reports", "reporterIp", "text", -1, false, null],
+        ["abuse_reports", "reviewedAt", "timestamp", 3, false, null],
+        ["abuse_reports", "reviewedBy", "text", -1, false, null],
+        ["abuse_reports", "status", "AbuseReportStatus", -1, true, "'PENDING'::\"AbuseReportStatus\""],
+        ["abuse_reports", "updatedAt", "timestamp", 3, true, null]
+      ],
+      "enums": [
+        ["AbuseReportStatus", ["PENDING", "INVESTIGATING", "RESOLVED", "DISMISSED"]],
+        ["AbuseReportType", ["SPAM", "MALWARE", "ILLEGAL", "COPYRIGHT", "HARASSMENT", "ADULT_CONTENT", "SCAM", "OTHER"]]
+      ],
+      "constraints": [
+        ["abuse_reports", "abuse_reports_linkId_fkey", "FOREIGN KEY (\"linkId\") REFERENCES links(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["abuse_reports", "abuse_reports_pkey", "PRIMARY KEY (id)"]
+      ],
+      "indexes": [
+        ["abuse_reports", "abuse_reports_pkey", true, true, "btree", ["id"], null]
+      ]
+    }
+  },
+  {
+    "name": "20250925080756_enhanced_analytics_and_admin_logs",
+    "checksum": "c399cb5e3385b1350adf104159f64696469d7f72609592ae91199aea0265af9c",
+    "definitions": {
+      "columns": [
+        ["admin_logs", "action", "AdminAction", -1, true, null],
+        ["admin_logs", "adminId", "text", -1, true, null],
+        ["admin_logs", "createdAt", "timestamp", 3, true, "CURRENT_TIMESTAMP"],
+        ["admin_logs", "details", "jsonb", -1, false, null],
+        ["admin_logs", "entityId", "text", -1, false, null],
+        ["admin_logs", "entityType", "text", -1, true, null],
+        ["admin_logs", "id", "text", -1, true, null],
+        ["admin_logs", "ipAddress", "text", -1, false, null],
+        ["admin_logs", "userAgent", "text", -1, false, null],
+        ["link_analytics", "browser", "text", -1, false, null],
+        ["link_analytics", "device", "text", -1, false, null],
+        ["link_analytics", "language", "text", -1, false, null],
+        ["link_analytics", "os", "text", -1, false, null],
+        ["link_analytics", "utm_campaign", "text", -1, false, null],
+        ["link_analytics", "utm_content", "text", -1, false, null],
+        ["link_analytics", "utm_medium", "text", -1, false, null],
+        ["link_analytics", "utm_source", "text", -1, false, null],
+        ["link_analytics", "utm_term", "text", -1, false, null]
+      ],
+      "enums": [
+        ["AdminAction", ["USER_ROLE_CHANGED", "USER_LIMIT_CHANGED", "USER_BANNED", "USER_UNBANNED", "LINK_DELETED", "LINK_DEACTIVATED", "LINK_REACTIVATED", "CUSTOM_REQUEST_APPROVED", "CUSTOM_REQUEST_REJECTED", "DOMAIN_CREATED", "DOMAIN_UPDATED", "DOMAIN_DELETED", "ABUSE_REPORT_REVIEWED", "SYSTEM_SETTINGS_CHANGED", "BULK_ACTION_PERFORMED"]]
+      ],
+      "constraints": [
+        ["admin_logs", "admin_logs_adminId_fkey", "FOREIGN KEY (\"adminId\") REFERENCES users(id) ON UPDATE CASCADE ON DELETE CASCADE"],
+        ["admin_logs", "admin_logs_pkey", "PRIMARY KEY (id)"]
+      ],
+      "indexes": [
+        ["admin_logs", "admin_logs_action_idx", false, true, "btree", ["action"], null],
+        ["admin_logs", "admin_logs_adminId_idx", false, true, "btree", ["\"adminId\""], null],
+        ["admin_logs", "admin_logs_createdAt_idx", false, true, "btree", ["\"createdAt\""], null],
+        ["admin_logs", "admin_logs_entityType_idx", false, true, "btree", ["\"entityType\""], null],
+        ["admin_logs", "admin_logs_pkey", true, true, "btree", ["id"], null],
+        ["link_analytics", "link_analytics_clickedAt_idx", false, true, "btree", ["\"clickedAt\""], null],
+        ["link_analytics", "link_analytics_linkId_idx", false, true, "btree", ["\"linkId\""], null]
+      ]
+    }
+  },
+  {
+    "name": "20261013160000_add_qr_generator_config",
+    "checksum": "921181b287d06121691b86b27516fe9bfb4cc8ade02e16cbd3a9b52db1ee09c8",
+    "definitions": {
+      "columns": [
+        ["qr_generator_config", "enabled", "bool", -1, true, "false"],
+        ["qr_generator_config", "generatorUrl", "text", -1, true, "''::text"],
+        ["qr_generator_config", "id", "text", -1, true, "'default'::text"],
+        ["qr_generator_config", "options", "jsonb", -1, true, "'{}'::jsonb"],
+        ["qr_generator_config", "updatedAt", "timestamp", 3, true, null]
+      ],
+      "enums": [
+      ],
+      "constraints": [
+        ["qr_generator_config", "qr_generator_config_pkey", "PRIMARY KEY (id)"]
+      ],
+      "indexes": [
+        ["qr_generator_config", "qr_generator_config_pkey", true, true, "btree", ["id"], null]
+      ]
+    }
+  }
+]
