@@ -44,15 +44,21 @@ A modern URL shortener with analytics, admin panel, and abuse reporting.
 
 ## Direct links
 
-Choose **Direct link** in the create-link form to generate a self-contained redirect at `/go/<token>`. The destination is encoded with unpadded base64url, using raw DEFLATE only when it saves space. An HMAC-SHA256 signature prevents destination changes. The signing secret remains on the server.
+Choose **ลิงก์แบบไม่บันทึก** in the create-link form to generate a self-contained redirect at `/d/<token>`. Version 2 tries fixed patterns for Google Drive, Docs, Sheets, Slides, Forms, Apps Script, Canva, YouTube, and MWIT Open House. Repeated URL parts are represented by one header byte; opaque IDs use six bits per character. General URLs try implicit HTTPS and raw DEFLATE with or without a fixed URL dictionary. The smallest packet wins. Queries (including tracking parameters and empty queries), fragments, and ID characters are preserved exactly after normal URL normalization.
+
+The token is `2` followed by unpadded base64url of the header, payload, and a 16-byte HMAC-SHA256 tag. The [128-bit truncation follows RFC 2104 §5](https://www.rfc-editor.org/rfc/rfc2104#section-5). Authentication happens before decoding or bounded decompression. The signing secret remains on the server. Existing `/go/v1r...` and `/go/v1d...` links keep working with their original full-length signatures; both public paths accept both versions. Version 2's pattern order and dictionary are immutable: changes require a new protocol version.
 
 Creation uses the existing school-account session (and its database authentication). No destination mapping or link record is saved. Opening a direct link requires neither authentication nor a database query. Direct links use the application's `NEXTAUTH_URL` origin; saved links still support managed domains.
 
 Direct links can be longer than the original URL. They offer no custom alias, account listing, click analytics, per-link editing, deletion, or database-backed abuse moderation. Encoding is reversible, not encryption; avoid sharing sensitive destinations. Destinations are limited to 4096 bytes after URL normalization, and only HTTP(S) URLs without embedded credentials are accepted.
 
-Set `DIRECT_LINK_SECRET` for an independent signing key, or the application uses `NEXTAUTH_SECRET`. Keep that secret stable: rotating the active signing key invalidates previously created direct links. The `/go/` route deliberately does not import authentication or Prisma.
+Set `DIRECT_LINK_SECRET` for an independent signing key, or the application uses `NEXTAUTH_SECRET`. Keep that secret stable: rotating the active signing key invalidates previously created direct links. The `/d/` and `/go/` routes deliberately do not import authentication or Prisma. This codec change requires no database migration.
 
 Run codec and tamper-resistance tests with `npm run test:direct-links` (Node.js 22.6+ with type stripping, or Node.js 24+).
+
+Run `bun run benchmark:direct-links` for a reproducible 18-link school URL corpus with synthetic IDs. It compares signed v1 and v2 token lengths and checks exact round trips. The corpus contains no people's saved destinations. The signed `https://roblox.com/` example drops from 74 to 37 token characters; full link lengths also include your application origin and `/d/`.
+
+Related research: [PortalRunner's link-compressor video](https://www.youtube.com/watch?v=TOr1Vvji6jA) and [ha.mr's source](https://github.com/p2r3/ha.mr) demonstrate browser-side URL structure compression and Huffman-coded domain/character dictionaries. Our implementation uses fixed provider patterns and a bounded DEFLATE fallback, retaining authenticated school-account issuance and signed server redirects. Neither approach can guarantee a tiny fixed-length code for every arbitrary destination without storing a mapping.
 
 ## Dependency updates and verification
 

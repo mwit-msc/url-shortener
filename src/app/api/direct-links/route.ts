@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
   if (!validateHost(request)) return createHostValidationResponse()
   try {
     // Issuance uses the existing school-account authentication. Destinations
-    // are never persisted; the public /go route has no auth or Prisma import.
+    // are never persisted; the public /d and /go routes have no auth or Prisma import.
     const user = await getCurrentUser()
     if (!user) return NextResponse.json({ error: "กรุณาเข้าสู่ระบบ" }, { status: 401 })
     const secret = getDirectLinkSecret()
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       kind: "direct",
-      link: { fullUrl: `${origin}/go/${token}`, originalUrl },
+      link: { fullUrl: `${origin}/d/${token}`, originalUrl },
     }, { headers: { "Cache-Control": "no-store" } })
   } catch (error) {
     if (error instanceof DirectLinkError) return NextResponse.json({ error: error.message }, { status: 400 })

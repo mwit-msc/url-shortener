@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "test:direct-links": "node --experimental-strip-types --test tests/direct-links.test.mjs",
+    "benchmark:direct-links": "node --experimental-strip-types scripts/benchmark-direct-links.mjs",
     "test:qr": "node --experimental-strip-types --test tests/qr-generator.test.mjs",
     "test:migrations": "node --test tests/migrations.test.mjs"
   },
